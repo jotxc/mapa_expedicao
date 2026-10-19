@@ -1,0 +1,1988 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-tema="claro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#11304f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Mapa EXP">
+<title>Mapa EXP</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2311304f'/%3E%3Cg fill='%234a8de0'%3E%3Crect x='12' y='12' width='16' height='16' rx='3'/%3E%3Crect x='36' y='12' width='16' height='16' rx='3'/%3E%3Crect x='12' y='36' width='16' height='16' rx='3'/%3E%3C/g%3E%3Crect x='36' y='36' width='16' height='16' rx='3' fill='%23d98324'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --fundo: #f2f4f7;
+    --cartao: #ffffff;
+    --texto: #1b2430;
+    --texto-fraco: #5b6675;
+    --borda: #d3d9e0;
+    --ocupada: #2f6fd0;
+    --ocupada-clara: #dbe7fa;
+    --coleta: #1f9d55;
+    --coleta-clara: #e2f4e9;
+    --vazia: #eef1f4;
+    --alerta: #d98324;
+    --erro: #c0392b;
+    --erro-clara: #fdecea;
+    --toque: 58px;
+    --planta-bg: #e7ebf0;
+    --pos-bg: #f7f9fb;
+    --pos-borda-vazia: #b9c2cc;
+    --inconsistente-bg: #fff6e8;
+    --painel-cabecalho: #e9eef4;
+    --aviso-erro-bg: #fdecea;
+    --aviso-erro-borda: #f0b4ad;
+    --aviso-erro-txt: #7d241c;
+    --aviso-alerta-bg: #fdf3e3;
+    --aviso-alerta-borda: #f0d3a0;
+    --aviso-alerta-txt: #7a5312;
+  }
+
+  [data-tema="escuro"] {
+    --fundo: #0f1722;
+    --cartao: #182230;
+    --texto: #e7edf5;
+    --texto-fraco: #93a3b8;
+    --borda: #2c3a4d;
+    --ocupada: #4a8de0;
+    --ocupada-clara: #1d3350;
+    --coleta: #3fbf76;
+    --coleta-clara: #142a1e;
+    --vazia: #1a2430;
+    --alerta: #e0a34a;
+    --erro: #e2685c;
+    --erro-clara: #3a1f1d;
+    --planta-bg: #0c141d;
+    --pos-bg: #141d28;
+    --pos-borda-vazia: #3a4a5e;
+    --inconsistente-bg: #2e2617;
+    --painel-cabecalho: #1f2b3a;
+    --aviso-erro-bg: #3a1f1d;
+    --aviso-erro-borda: #7d3b34;
+    --aviso-erro-txt: #f0b4ad;
+    --aviso-alerta-bg: #332912;
+    --aviso-alerta-borda: #7a6122;
+    --aviso-alerta-txt: #f0d3a0;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--fundo);
+    color: var(--texto);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 16px;
+  }
+
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    background: #11304f;
+    color: #fff;
+    padding: 12px 16px;
+    padding-top: calc(12px + env(safe-area-inset-top, 0px));
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  }
+  .marca-linha {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  header h1 { margin: 0; font-size: 1.15rem; letter-spacing: 0.3px; }
+  header .subtitulo { margin: 4px 0 0; font-size: 0.72rem; color: #c6d4e4; line-height: 1.3; }
+  .header-acoes { display: flex; gap: 6px; flex: 0 0 auto; }
+  .botao-icone {
+    min-height: 34px;
+    padding: 0 10px;
+    border-radius: 8px;
+    border: 1px solid #33506e;
+    background: transparent;
+    color: #c6d4e4;
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .botao-icone.ativa { background: #2f6fd0; border-color: #2f6fd0; color: #fff; }
+
+  .busca-linha { display: flex; gap: 8px; margin-top: 10px; }
+  .busca-linha input {
+    flex: 1;
+    min-width: 0;
+    font-size: 1rem;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid #33506e;
+    background: #0d2438;
+    color: #fff;
+  }
+  .busca-linha input::placeholder { color: #8fa6bd; }
+
+  .busca-acoes { display: flex; gap: 8px; margin-top: 8px; }
+  .botao-primario {
+    flex: 1;
+    min-height: 46px;
+    border: none;
+    border-radius: 10px;
+    background: #2f6fd0;
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .botao-primario:disabled { background: #5b7087; opacity: 0.7; cursor: default; }
+  .botao-secundario {
+    min-height: 46px;
+    border: 1px solid #33506e;
+    border-radius: 10px;
+    background: transparent;
+    color: #c6d4e4;
+    padding: 0 14px;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+  .botao-secundario.ativa { background: #2f6fd0; border-color: #2f6fd0; color: #fff; }
+
+  .resultados {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--cartao);
+    color: var(--texto);
+    border-top: 1px solid var(--borda);
+    max-height: 48vh;
+    overflow-y: auto;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  }
+  .resultado {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--borda);
+    cursor: pointer;
+  }
+  .resultado input { width: 22px; height: 22px; margin-top: 2px; }
+  .resultado-texto { font-size: 0.88rem; }
+  .resultado-contagem { display: block; color: var(--texto-fraco); font-size: 0.74rem; margin-top: 2px; }
+
+  main { padding: 12px 12px calc(64px + env(safe-area-inset-bottom, 0px)); }
+
+  .aviso {
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    font-size: 0.85rem;
+    line-height: 1.35;
+  }
+  .aviso.erro { background: var(--aviso-erro-bg); border: 1px solid var(--aviso-erro-borda); color: var(--aviso-erro-txt); }
+  .aviso.alerta { background: var(--aviso-alerta-bg); border: 1px solid var(--aviso-alerta-borda); color: var(--aviso-alerta-txt); }
+  .aviso ul { margin: 6px 0 0; padding-left: 18px; }
+  .aviso li { margin: 2px 0; }
+  .aviso-sub { display: block; margin-top: 8px; }
+  .aviso-item-clicavel {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: none;
+    padding: 2px 0;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+  }
+  .aviso-item-clicavel:hover { text-decoration: underline; }
+  .aviso-item-clicavel:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; border-radius: 4px; }
+  .aviso-ir { display: block; font-size: 0.7rem; opacity: 0.75; margin-top: 1px; }
+
+  .avisos { margin: 12px 0 0; }
+  .aviso-cabecalho { display: flex; align-items: center; gap: 10px; }
+  .aviso-cabecalho strong { flex: 1; }
+  .aviso-entendido {
+    flex: 0 0 auto;
+    min-height: 30px;
+    padding: 0 12px;
+    border-radius: 8px;
+    border: 1px solid currentColor;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: 0.76rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .aviso-discreto {
+    display: inline-flex;
+    align-items: center;
+    min-height: 30px;
+    padding: 0 10px;
+    border-radius: 8px;
+    border: 1px solid var(--borda);
+    background: transparent;
+    color: var(--texto-fraco);
+    font: inherit;
+    font-size: 0.76rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  /* Painel lateral: materiais filtrados + lotes (expande ao clicar) */
+  .materiais-painel {
+    background: var(--cartao);
+    border: 1px solid var(--borda);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .materiais-painel[hidden] { display: none; }
+  .materiais-painel > h2 {
+    margin: 0;
+    padding: 11px 14px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    background: var(--painel-cabecalho);
+    color: var(--texto);
+    border-bottom: 1px solid var(--borda);
+  }
+  .materiais-lista { display: flex; flex-direction: column; }
+  .material-item { border-bottom: 1px solid var(--borda); }
+  .material-item:last-child { border-bottom: none; }
+  .material-item > summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    cursor: pointer;
+    list-style: none;
+    font-size: 0.82rem;
+  }
+  .material-item > summary::-webkit-details-marker { display: none; }
+  .material-item > summary::after {
+    content: '\25B8';
+    margin-left: auto;
+    color: var(--texto-fraco);
+    transition: transform 0.15s;
+  }
+  .material-item[open] > summary::after { transform: rotate(90deg); }
+  .material-item[open] > summary { background: var(--painel-cabecalho); }
+  .material-cor {
+    width: 16px; height: 16px; border-radius: 4px; flex: 0 0 auto;
+    border: 1px solid rgba(0, 0, 0, 0.25);
+  }
+  .material-nome { flex: 1; min-width: 0; }
+  .material-contagem { display: block; color: var(--texto-fraco); font-size: 0.7rem; margin-top: 2px; }
+  .material-remover {
+    flex: 0 0 auto;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    border: 1px solid var(--borda);
+    background: transparent;
+    color: var(--texto-fraco);
+    font-size: 1.05rem;
+    line-height: 1;
+    display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+  .material-remover:hover { background: var(--alerta); color: #fff; border-color: var(--alerta); }
+  .material-lotes { padding: 2px 12px 10px 32px; display: flex; flex-direction: column; gap: 4px; }
+  .lote-item { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; }
+  .lote-item input { width: 18px; height: 18px; }
+  .lote-nome { flex: 1; }
+  .lote-contagem { color: var(--texto-fraco); font-size: 0.72rem; }
+  .lote-vazio { color: var(--texto-fraco); font-size: 0.78rem; margin: 4px 0; }
+  .materiais-acoes { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--borda); }
+  .materiais-acoes .botao-primario, .materiais-acoes .botao-secundario { flex: 1; min-height: 42px; }
+  .materiais-acoes .botao-primario { background: #2f6fd0; color: #fff; border: none; }
+  .materiais-acoes .botao-secundario { color: var(--texto-fraco); border-color: var(--borda); }
+
+  /* Layout em colunas (mapa + painel lateral) */
+  .layout { display: block; }
+  .area-mapa { min-width: 0; }
+  .area-lateral { display: flex; flex-direction: column; gap: 12px; }
+
+  /* Desktop: tela cheia (mapa + legenda + descrições), sem rolagem da página */
+  @media (min-width: 1024px) {
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px 12px;
+      padding: 10px 16px;
+    }
+    .marca-linha { flex: 0 0 auto; align-items: center; }
+    header h1 { font-size: 1.05rem; }
+    header .subtitulo { margin-top: 2px; font-size: 0.68rem; }
+    .busca-linha { flex: 1 1 320px; margin: 0; }
+    .busca-linha input { padding: 9px 12px; font-size: 0.95rem; }
+    .busca-acoes { flex: 0 0 auto; margin: 0; }
+    .botao-primario, .botao-secundario { min-height: 38px; }
+    .botao-icone { min-height: 30px; padding: 0 8px; }
+
+    /* Cabeçalho, mapa e rodapé ocupam a tela inteira */
+    body {
+      display: grid;
+      grid-template-areas:
+        "cabecalho"
+        "mapa"
+        "rodape";
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      height: 100dvh;
+      overflow: hidden;
+    }
+    body > header { grid-area: cabecalho; position: relative; top: auto; }
+    body > footer { grid-area: rodape; position: static; }
+
+    main#mapa {
+      grid-area: mapa;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      padding: 12px 16px;
+      overflow: hidden;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 12px;
+      flex: 1 1 auto;
+      min-height: 0;
+      align-items: stretch;
+    }
+    .layout.com-painel {
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+    }
+    .area-mapa { min-width: 0; min-height: 0; display: flex; }
+    #planta-viewport { flex: 1 1 auto; max-height: none; min-height: 220px; }
+    .area-lateral {
+      display: none;
+      flex-direction: column;
+      min-height: 0;
+      max-height: none;
+      overflow: hidden;
+    }
+    .layout.com-painel .area-lateral { display: flex; }
+    .materiais-painel { display: flex; flex-direction: column; min-height: 0; flex: 1 1 auto; }
+    .materiais-lista { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+  }
+
+  /* Celular (sem o layout de duas colunas): o mapa ocupa a área principal e
+     os avisos + a lista de materiais ficam logo abaixo (rolando a página). */
+  @media (max-width: 1023px) {
+    /* Cabeçalho compacto: título+botões numa linha, busca+Aplicar na linha de baixo */
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px 8px;
+      padding: 6px 10px;
+      padding-top: calc(6px + env(safe-area-inset-top, 0px));
+    }
+    .marca-linha { flex: 1 1 100%; align-items: center; gap: 8px; }
+    header h1 { font-size: 1.02rem; }
+    header .subtitulo { margin-top: 1px; font-size: 0.64rem; }
+    .botao-icone { min-height: 30px; padding: 0 8px; font-size: 0.68rem; }
+    .busca-linha { flex: 1 1 auto; min-width: 0; margin: 0; }
+    .busca-linha input { padding: 9px 12px; }
+    .busca-acoes { flex: 0 0 auto; margin: 0; }
+    .botao-primario, .botao-secundario { min-height: 40px; font-size: 0.85rem; }
+    .botao-secundario { padding: 0 12px; }
+    .resultados { max-height: 60vh; }
+
+    main#mapa { display: flex; flex-direction: column; padding-top: 10px; }
+    .layout { display: contents; }
+    .area-mapa { order: 1; display: block; min-width: 0; }
+    .area-lateral { order: 2; }
+    #avisos { order: 3; }
+    #planta-viewport {
+      height: auto;
+      max-height: calc(100dvh - var(--alt-cabecalho, 108px) - var(--alt-rodape, 46px) - 22px);
+      min-height: 180px;
+      max-width: 100%;
+    }
+  }
+
+  /* Planta baixa (área da expedição) */
+  #planta-viewport {
+    position: relative;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(17, 48, 79, 0.5) transparent;
+    border: 1px solid var(--borda);
+    border-radius: 12px;
+    background: var(--planta-bg);
+  }
+  #planta-viewport::-webkit-scrollbar { width: 10px; height: 10px; }
+  #planta-viewport::-webkit-scrollbar-thumb {
+    background: rgba(17, 48, 79, 0.45);
+    border-radius: 6px;
+  }
+  #planta-viewport::-webkit-scrollbar-track { background: transparent; }
+  .planta {
+    display: block;
+    width: max-content;
+    padding: 10px 12px 14px;
+    background: var(--planta-bg);
+    transform-origin: 0 0;
+  }
+  .faixa-par { display: flex; flex-direction: column; }
+  .fila-linha { display: flex; align-items: stretch; }
+  .rotulo-fila {
+    position: sticky;
+    left: 0;
+    z-index: 3;
+    flex: 0 0 auto;
+    width: 64px;
+    display: flex;
+    align-items: center;
+    padding: 0 6px 0 2px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--texto);
+    background: var(--planta-bg);
+  }
+  .quadrados { display: flex; gap: 3px; }
+  .corredor { height: 34px; }
+
+  .posicao {
+    position: relative;
+    overflow: hidden;
+    flex: 0 0 auto;
+    width: var(--toque);
+    height: var(--toque);
+    border-radius: 10px;
+    border: 2px solid var(--borda);
+    background: var(--pos-bg);
+    color: var(--texto);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    cursor: pointer;
+    font: inherit;
+  }
+  .posicao:focus-visible { outline: 3px solid #2f6fd0; outline-offset: 2px; }
+  .posicao .num, .posicao .marca {
+    position: relative;
+    z-index: 1;
+    font-size: 0.82rem;
+    font-weight: 600;
+    line-height: 1;
+  }
+  .posicao .marca { margin-top: 3px; color: var(--texto-fraco); font-size: 0.68rem; }
+
+  .posicao.ocupada { background: var(--ocupada-clara); border-color: var(--ocupada); }
+  .posicao.vazia { background: var(--cartao); border-style: dashed; border-color: var(--pos-borda-vazia); }
+  .posicao.inconsistente { background: var(--inconsistente-bg); border-color: var(--alerta); }
+  .posicao.inconsistente .marca { color: var(--alerta); font-weight: 700; }
+
+  /* Estados com filtro aplicado */
+  .posicao.filtrado.atenuada { opacity: 0.35; filter: grayscale(1); }
+  .posicao.filtrado.destacada { border-color: rgba(0, 0, 0, 0.25); }
+  .posicao.filtrado .num {
+    background: rgba(255, 255, 255, 0.9);
+    color: #1b2430;
+    border-radius: 4px;
+    padding: 0 3px;
+  }
+
+  /* Pallet(is) coletado(s): posição fica esmaecida (apagada) com um V */
+  .posicao.coletada {
+    background: var(--vazia);
+    border-style: dashed;
+    border-color: var(--pos-borda-vazia);
+    opacity: 0.45;
+  }
+  .posicao.coleta-parcial { border-color: var(--coleta); }
+  .selo-coleta {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.86rem;
+    font-weight: 800;
+    line-height: 1;
+    border-radius: 999px;
+    background: var(--coleta);
+    color: #fff;
+    margin: auto;
+    width: 26px;
+    height: 26px;
+  }
+  .posicao.coleta-parcial .selo-coleta {
+    inset: 2px 2px auto auto;
+    width: 16px;
+    height: 16px;
+    font-size: 0.56rem;
+  }
+
+  footer {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    background: var(--cartao);
+    border-top: 1px solid var(--borda);
+    padding: 8px 12px;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    font-size: 0.72rem;
+    color: var(--texto-fraco);
+  }
+  footer .legenda { display: flex; align-items: center; gap: 5px; }
+  footer .amostra {
+    width: 14px; height: 14px; border-radius: 4px; border: 2px solid var(--borda);
+    display: inline-block;
+  }
+  footer .amostra.ocupada { background: var(--ocupada-clara); border-color: var(--ocupada); }
+  footer .amostra.vazia { background: var(--cartao); border-style: dashed; }
+  footer .amostra.inconsistente { background: var(--inconsistente-bg); border-color: var(--alerta); }
+  footer .amostra.coletada { background: var(--coleta-clara); border-color: var(--coleta); }
+  footer .resumo-rodape { margin-left: auto; font-weight: 600; color: var(--texto); }
+
+  .sem-dados { text-align: center; color: var(--texto-fraco); padding: 40px 16px; }
+
+  /* Balão de detalhes (abre ao tocar numa posição) */
+  .balao {
+    position: fixed;
+    z-index: 20;
+    max-width: min(260px, calc(100vw - 16px));
+    background: var(--cartao);
+    border: 1px solid var(--borda);
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.28);
+    padding: 10px 28px 10px 12px;
+  }
+  .balao[hidden] { display: none; }
+  .balao-fechar {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 50%;
+    background: var(--vazia);
+    color: var(--texto);
+    font-size: 0.72rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .balao-item + .balao-item {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--borda);
+  }
+  .balao-nome { font-size: 0.86rem; font-weight: 600; line-height: 1.2; }
+  .balao-cod, .balao-lote { font-size: 0.78rem; color: var(--texto-fraco); margin-top: 2px; }
+  .balao-vazio { margin: 0; font-size: 0.82rem; color: var(--texto-fraco); }
+  .balao-coleta {
+    margin-top: 6px;
+    min-height: 40px;
+    width: 100%;
+    padding: 0 10px;
+    border-radius: 8px;
+    border: 1px solid var(--coleta);
+    background: transparent;
+    color: var(--coleta);
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .balao-coleta[aria-pressed="true"] {
+    background: var(--coleta);
+    color: #fff;
+  }
+  .balao-item.coletado .balao-nome,
+  .balao-item.coletado .balao-cod,
+  .balao-item.coletado .balao-lote { text-decoration: line-through; opacity: 0.6; }
+  .posicao.selecionada { outline: 3px solid #11304f; outline-offset: 2px; }
+
+  /* Impressão / PDF */
+  @media print {
+    @page { margin: 10mm; }
+    header { position: static; box-shadow: none; }
+    header .busca-linha, header .busca-acoes, header .header-acoes,
+    footer, #painel { display: none !important; }
+    html, body, main { background: #fff; color: #000; }
+    main { padding: 0; }
+    #planta-viewport { overflow: visible; border: none; background: #fff; }
+    .planta { background: #fff; transform: none !important; zoom: 1 !important; }
+    .rotulo-fila { background: #fff; color: #000; }
+    .posicao { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+
+  /* Tela de upload (carregar arquivos do dia) */
+  .upload {
+    display: flex;
+    justify-content: center;
+    padding: 24px 16px calc(40px + env(safe-area-inset-bottom, 0px));
+  }
+  .upload[hidden] { display: none; }
+  .upload-cartao {
+    width: 100%;
+    max-width: 560px;
+    background: var(--cartao);
+    border: 1px solid var(--borda);
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.08);
+  }
+  .upload-cartao h2 { margin: 0 0 6px; font-size: 1.2rem; }
+  .upload-dica { margin: 0 0 16px; font-size: 0.85rem; color: var(--texto-fraco); line-height: 1.45; }
+  .upload-campo { display: block; margin-bottom: 12px; font-size: 0.82rem; font-weight: 600; }
+  .upload-campo span { display: block; margin-bottom: 4px; }
+  .upload-campo input[type="file"] {
+    width: 100%;
+    font-size: 0.82rem;
+    padding: 10px;
+    border: 1px solid var(--borda);
+    border-radius: 10px;
+    background: var(--pos-bg);
+    color: var(--texto);
+  }
+  .upload-area {
+    margin: 6px 0 14px;
+    padding: 20px 14px;
+    text-align: center;
+    font-size: 0.82rem;
+    color: var(--texto-fraco);
+    border: 2px dashed var(--pos-borda-vazia);
+    border-radius: 12px;
+    background: var(--pos-bg);
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .upload-area.sobre { border-color: var(--ocupada); background: var(--ocupada-clara); }
+  .upload-lista { list-style: none; margin: 0 0 14px; padding: 0; font-size: 0.8rem; }
+  .upload-lista li {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 10px; margin-bottom: 6px;
+    background: var(--pos-bg); border: 1px solid var(--borda); border-radius: 8px;
+  }
+  .upload-lista .tipo {
+    flex: 0 0 auto; font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 6px; background: var(--ocupada); color: #fff;
+  }
+  .upload-lista .nome { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .upload-msgs { margin: 0 0 14px; }
+  .upload-msgs .msg {
+    font-size: 0.8rem; padding: 9px 11px; border-radius: 8px; margin-bottom: 6px; line-height: 1.4;
+  }
+  .upload-msgs .msg.erro { background: var(--aviso-erro-bg); color: var(--aviso-erro-txt); border: 1px solid var(--aviso-erro-borda); }
+  .upload-msgs .msg.aviso { background: var(--aviso-alerta-bg); color: var(--aviso-alerta-txt); border: 1px solid var(--aviso-alerta-borda); }
+  .upload-progresso { margin-top: 12px; font-size: 0.8rem; color: var(--texto-fraco); }
+  .upload-progresso .barra { height: 6px; border-radius: 4px; background: var(--borda); overflow: hidden; margin-top: 6px; }
+  .upload-progresso .barra > span { display: block; height: 100%; width: 30%; background: var(--ocupada); animation: upload-barra 1.1s ease-in-out infinite; }
+  @keyframes upload-barra { 0% { margin-left: -30%; } 100% { margin-left: 100%; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="marca-linha">
+    <div>
+      <h1 id="marca">Mapa EXP</h1>
+      <p class="subtitulo" id="subtitulo"></p>
+    </div>
+    <div class="header-acoes">
+      <button type="button" id="botao-arquivos" class="botao-icone" aria-label="Trocar arquivos do dia">Arquivos</button>
+      <button type="button" id="botao-tema" class="botao-icone" aria-label="Alternar tema claro e escuro">Escuro</button>
+    </div>
+  </div>
+  <div class="busca-linha">
+    <input id="busca" type="search" autocomplete="off"
+           placeholder="Material, descrição, UD ou lote">
+  </div>
+  <div class="busca-acoes">
+    <button id="aplicar" class="botao-primario" disabled>Aplicar</button>
+    <button id="limpar-filtro" class="botao-secundario" hidden>Limpar filtros</button>
+  </div>
+  <div id="resultados" class="resultados" hidden></div>
+</header>
+
+<main id="mapa"></main>
+
+<section id="upload" class="upload" hidden>
+  <div class="upload-cartao">
+    <h2>Carregar arquivos do dia</h2>
+    <p class="upload-dica">
+      Selecione a exportação da LX02 (<strong>.xlsx</strong>) e o PDF consolidado
+      da bipagem (<strong>filas.pdf</strong>) — ou o TXT do coletor. Nada é
+      enviado a servidor: tudo é processado aqui no seu aparelho.
+    </p>
+
+    <label class="upload-campo">
+      <span>LX02 (.xlsx)</span>
+      <input type="file" id="upload-lx02" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+    </label>
+
+    <label class="upload-campo">
+      <span>Coletor (PDF ou TXT — pode escolher vários)</span>
+      <input type="file" id="upload-coletor" accept=".pdf,.txt" multiple>
+    </label>
+
+    <div id="upload-area" class="upload-area" tabindex="0">
+      ou arraste e solte os arquivos aqui
+    </div>
+
+    <ul id="upload-lista" class="upload-lista" hidden></ul>
+    <div id="upload-msgs" class="upload-msgs" hidden></div>
+
+    <button type="button" id="upload-processar" class="botao-primario" disabled>Processar</button>
+    <button type="button" id="upload-cancelar" class="botao-secundario" hidden>Voltar ao mapa</button>
+    <div id="upload-progresso" class="upload-progresso" hidden>
+      <span id="upload-progresso-txt">Processando…</span>
+      <div class="barra"><span></span></div>
+    </div>
+  </div>
+</section>
+
+<footer id="rodape"></footer>
+
+<div id="painel" class="balao" role="dialog" aria-labelledby="painel-conteudo" hidden>
+  <button type="button" class="balao-fechar" id="painel-fechar" aria-label="Fechar">&#10005;</button>
+  <div id="painel-conteudo"></div>
+</div>
+
+<!-- Bibliotecas embutidas (offline): PDF.js e SheetJS. Injetadas pelo gerador. -->
+<script>/*__LIB_PDFJS__*/</script>
+<script>/*__LIB_XLSX__*/</script>
+<script id="pdfjs-worker-b64" type="application/octet-stream">__PDF_WORKER_B64__</script>
+
+<!-- Núcleo de leitura (LX02/PDF/TXT) — espelha mapa_dados.py -->
+<script>/*__MAPA_CORE__*/</script>
+
+<script>
+  // Os dados são injetados aqui pelo gerar_mapa_html.py
+  // (variável mutável: a tela de upload pode preenchê-la no navegador)
+  let DADOS_MAPA = __DADOS_MAPA__;
+
+  // Identidade do app (usada quando os dados vêm do upload no navegador)
+  const APP = {
+    marca: 'Mapa EXP',
+    subtitulo: 'Expedição — Conferência de pallets',
+    versao: '1.0',
+  };
+
+  // Cores usadas para destacar os materiais selecionados.
+  // Ordem pensada para que materiais vizinhos (1º, 2º, 3º...) fiquem o mais
+  // diferentes possível entre si (alterna quente/frio e claro/escuro).
+  const PALETA = [
+    '#e6194b', // vermelho
+    '#1f5fd0', // azul
+    '#2ca02c', // verde
+    '#ff7f0e', // laranja
+    '#7b2ff7', // roxo
+    '#17becf', // ciano
+    '#e6199e', // magenta
+    '#c9a227', // dourado
+    '#8b0000', // vinho
+    '#00806b', // verde-água escuro
+    '#ff69b4', // rosa
+    '#2f2f8f', // azul-marinho
+    '#6b8e23', // oliva
+    '#8c564b', // marrom
+    '#4b0082', // índigo
+    '#00b3a4', // turquesa
+    '#d2691e', // chocolate
+    '#c71585', // rosa-escuro
+    '#4682b4', // azul-aço
+    '#808080', // cinza
+  ];
+
+  // Quando houver mais materiais do que cores, reforça com listras/faixas.
+  const PADROES = [
+    '', // variante 0: cor sólida
+    'repeating-linear-gradient(45deg, rgba(0, 0, 0, 0.5) 0 4px, transparent 4px 9px)',
+    'repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.8) 0 4px, transparent 4px 9px)',
+    'repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.45) 0 4px, transparent 4px 9px)',
+  ];
+
+  // Fundo de um material: a cor (variante 0) ou cor + padrão (repetições).
+  function fundoMaterial(material) {
+    const info = ESTADO.cores[material];
+    if (!info) return 'transparent';
+    const padrao = PADROES[info.variante % PADROES.length] || '';
+    return padrao ? `${padrao}, ${info.cor}` : info.cor;
+  }
+
+  const ESTADO = {
+    selecionados: [],   // códigos de material escolhidos, na ordem
+    cores: {},          // material -> { cor }
+    filtroAtivo: false,
+    lotes: {},          // material -> Set de lotes aplicados no mapa
+    lotesPendentes: {}, // material -> Set de lotes marcados no painel
+    materiaisExpandidos: new Set(), // materiais com lotes abertos no painel
+    avisosOcultos: false, // usuário tocou "Entendido" nos avisos
+    coletados: new Set(), // chaves dos pallets já coletados (persistido no aparelho)
+  };
+
+  // Identifica um pallet para marcar a coleta (UD é o identificador do pallet).
+  // Sem UD, usa fila-posição-nível como identificador estável do endereço.
+  function chaveColeta(pallet, posicao) {
+    const ud = pallet.ud === null || pallet.ud === undefined ? '' : String(pallet.ud).trim();
+    if (ud) return `ud:${ud}`;
+    return `pos:${posicao.fila}-${posicao.posicao}-${pallet.empilhamento}`;
+  }
+
+  function palletsOrdenados(posicao) {
+    return [...(posicao.pallets || [])].sort((a, b) => a.empilhamento - b.empilhamento);
+  }
+
+  // A marcação de coleta vale para a "remessa" atual (mesma marca + geração).
+  // Trocar os arquivos do dia gera novo carimbo e começa zerado.
+  function chaveArmazenamentoColeta() {
+    const dados = DADOS_MAPA || {};
+    return `mapa-exp-coletados::${dados.marca || APP.marca}::${dados.gerado_em || ''}`;
+  }
+
+  function carregarColetados() {
+    ESTADO.coletados = new Set();
+    try {
+      const bruto = localStorage.getItem(chaveArmazenamentoColeta());
+      if (bruto) JSON.parse(bruto).forEach(chave => ESTADO.coletados.add(String(chave)));
+    } catch (erro) { /* armazenamento indisponível: segue sem persistir */ }
+  }
+
+  function salvarColetados() {
+    try {
+      localStorage.setItem(chaveArmazenamentoColeta(),
+        JSON.stringify([...ESTADO.coletados]));
+    } catch (erro) { /* ignora */ }
+  }
+
+  // Lote pode vir como número no JSON; usar sempre texto evita erro de tipo.
+  function chaveLote(lote) {
+    return lote === null || lote === undefined ? '' : String(lote);
+  }
+
+  const NOMES_NIVEL = { 1: 'pallet de baixo', 2: 'pallet de cima' };
+
+  function escapar(valor) {
+    const div = document.createElement('div');
+    div.textContent = valor === null || valor === undefined ? '—' : String(valor);
+    return div.innerHTML;
+  }
+
+  function normalizar(texto) {
+    return String(texto === null || texto === undefined ? '' : texto)
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+  }
+
+  // Índice "fila-posicao" -> dados da posição (para focar via avisos)
+  const POSICOES_POR_CHAVE = {};
+  function construirIndicePosicoes() {
+    Object.keys(POSICOES_POR_CHAVE).forEach(chave => { delete POSICOES_POR_CHAVE[chave]; });
+    DADOS_MAPA.filas.forEach(fila => fila.posicoes.forEach(posicao => {
+      POSICOES_POR_CHAVE[fila.fila + '-' + posicao.posicao] = posicao;
+    }));
+  }
+
+  // --- Catálogo de materiais (para a busca e o painel de lotes) ---
+  function montarCatalogo() {
+    const porMaterial = new Map();
+    const pallets = [];
+
+    DADOS_MAPA.filas.forEach(fila => fila.posicoes.forEach(posicao => {
+      posicao.pallets.forEach(pallet => {
+        pallets.push({
+          material: pallet.material,
+          descricao: pallet.descricao,
+          ud: pallet.ud,
+          lote: pallet.lote,
+        });
+        if (pallet.material === null) return;
+        if (!porMaterial.has(pallet.material)) {
+          porMaterial.set(pallet.material, {
+            material: pallet.material,
+            descricao: pallet.descricao,
+            pallets: 0,
+            posicoes: new Set(),
+            lotes: new Map(), // lote -> quantidade de pallets
+          });
+        }
+        const item = porMaterial.get(pallet.material);
+        item.pallets += 1;
+        item.posicoes.add(fila.fila + '-' + posicao.posicao);
+        const lote = chaveLote(pallet.lote);
+        item.lotes.set(lote, (item.lotes.get(lote) || 0) + 1);
+      });
+    }));
+
+    return { porMaterial, pallets, itens: [...porMaterial.values()] };
+  }
+
+  let CATALOGO = null;
+  function inicializarDados() {
+    construirIndicePosicoes();
+    CATALOGO = montarCatalogo();
+    carregarColetados();
+  }
+
+  function materiaisQueCasam(termo) {
+    const alvo = normalizar(termo);
+    const conjunto = new Set();
+    CATALOGO.pallets.forEach(pallet => {
+      if (pallet.material === null) return;
+      if (normalizar(pallet.material).includes(alvo) ||
+          normalizar(pallet.descricao).includes(alvo) ||
+          normalizar(pallet.ud).includes(alvo) ||
+          normalizar(pallet.lote).includes(alvo)) {
+        conjunto.add(pallet.material);
+      }
+    });
+    return conjunto;
+  }
+
+  // --- Resultados da busca ---
+  function itemResultadoHTML(item) {
+    const marcado = ESTADO.selecionados.includes(item.material) ? 'checked' : '';
+    return `<label class="resultado">
+      <input type="checkbox" value="${escapar(item.material)}" ${marcado}>
+      <span class="resultado-texto">
+        <strong>${escapar(item.material)}</strong> — ${escapar(item.descricao || '(sem descrição)')}
+        <span class="resultado-contagem">${item.pallets} pallet(s) · ${item.posicoes.size} posição(ões)</span>
+      </span>
+    </label>`;
+  }
+
+  function atualizarResultados() {
+    const caixa = document.getElementById('resultados');
+    const termo = document.getElementById('busca').value.trim();
+
+    if (!termo) {
+      caixa.hidden = true;
+      caixa.innerHTML = '';
+      return;
+    }
+
+    const casam = materiaisQueCasam(termo);
+    const itens = CATALOGO.itens.filter(item => casam.has(item.material));
+
+    if (!itens.length) {
+      caixa.innerHTML = '<p class="sem-dados">Nenhum material encontrado.</p>';
+      caixa.hidden = false;
+      return;
+    }
+
+    caixa.innerHTML = itens.map(itemResultadoHTML).join('');
+    caixa.hidden = false;
+
+    caixa.querySelectorAll('input[type=checkbox]').forEach(caixaSelecao => {
+      caixaSelecao.addEventListener('change', () => {
+        alternarSelecao(caixaSelecao.value, caixaSelecao.checked);
+      });
+    });
+  }
+
+  function alternarSelecao(material, marcado) {
+    const posicao = ESTADO.selecionados.indexOf(material);
+    if (marcado && posicao === -1) ESTADO.selecionados.push(material);
+    if (!marcado && posicao !== -1) ESTADO.selecionados.splice(posicao, 1);
+    atualizarBotoes();
+  }
+
+  function atualizarBotoes() {
+    const aplicar = document.getElementById('aplicar');
+    const quantidade = ESTADO.selecionados.length;
+    aplicar.disabled = quantidade === 0;
+    aplicar.textContent = quantidade
+      ? `Aplicar (${quantidade})`
+      : 'Aplicar';
+    document.getElementById('limpar-filtro').hidden = !ESTADO.filtroAtivo;
+  }
+
+  function aplicarFiltro() {
+    ESTADO.cores = {};
+    ESTADO.lotes = {};
+    ESTADO.lotesPendentes = {};
+    ESTADO.selecionados.forEach((material, indice) => {
+      ESTADO.cores[material] = {
+        cor: PALETA[indice % PALETA.length],
+        variante: Math.floor(indice / PALETA.length),
+      };
+      const item = CATALOGO.porMaterial.get(material);
+      const todos = new Set(item ? item.lotes.keys() : []);
+      ESTADO.lotes[material] = new Set(todos);
+      ESTADO.lotesPendentes[material] = new Set(todos);
+    });
+    ESTADO.filtroAtivo = ESTADO.selecionados.length > 0;
+    ESTADO.materiaisExpandidos.clear();
+
+    document.getElementById('busca').value = '';
+    document.getElementById('resultados').hidden = true;
+
+    renderizarMapa();
+  }
+
+  function limparFiltro() {
+    ESTADO.selecionados = [];
+    ESTADO.cores = {};
+    ESTADO.lotes = {};
+    ESTADO.lotesPendentes = {};
+    ESTADO.filtroAtivo = false;
+
+    document.getElementById('busca').value = '';
+    document.getElementById('resultados').hidden = true;
+
+    atualizarBotoes();
+    renderizarMapa();
+  }
+
+  function rotuloLote(lote) {
+    return lote === '' ? '(sem lote)' : lote;
+  }
+
+  // --- Painel lateral: materiais filtrados; clicar no material expande os lotes ---
+  function renderizarPainelMateriais() {
+    const painel = document.getElementById('painel-materiais');
+    const layout = document.getElementById('layout');
+    if (!painel) return;
+
+    if (!ESTADO.filtroAtivo) {
+      painel.hidden = true;
+      painel.innerHTML = '';
+      if (layout) layout.classList.remove('com-painel');
+      return;
+    }
+
+    const blocos = ESTADO.selecionados.map(material => {
+      const item = CATALOGO.porMaterial.get(material);
+      const pallets = item ? item.pallets : 0;
+      const lotes = item ? item.lotes.size : 0;
+      const nome = escapar(item && item.descricao ? item.descricao : '(sem descrição)');
+      const aberto = ESTADO.materiaisExpandidos.has(material);
+
+      return `<details class="material-item" data-material="${escapar(material)}"${aberto ? ' open' : ''}>
+        <summary>
+          <span class="material-cor" style="background:${fundoMaterial(material)}"></span>
+          <span class="material-nome">
+            ${nome}
+            <span class="material-contagem">${pallets} pallet(s) · ${lotes} lote(s) · cód. ${escapar(material)}</span>
+          </span>
+          <button type="button" class="material-remover" data-material="${escapar(material)}" aria-label="Excluir material do filtro" title="Excluir material">&times;</button>
+        </summary>
+        <div class="material-lotes" data-material="${escapar(material)}">${aberto ? listaLotesHTML(material) : ''}</div>
+      </details>`;
+    }).join('');
+
+    painel.hidden = false;
+    if (layout) layout.classList.add('com-painel');
+    painel.innerHTML =
+      '<h2>Materiais</h2>' +
+      `<div class="materiais-lista">${blocos}</div>` +
+      '<div class="materiais-acoes">' +
+        '<button type="button" class="botao-primario" id="aplicar-lotes">Aplicar lotes</button>' +
+        '<button type="button" class="botao-secundario" id="marcar-lotes">Marcar todos</button>' +
+      '</div>';
+
+    // Os lotes só são gerados ao expandir cada material (evita travar com muitos).
+    painel.querySelectorAll('details.material-item').forEach(detalhe => {
+      detalhe.addEventListener('toggle', () => {
+        const material = detalhe.dataset.material;
+        const corpo = detalhe.querySelector('.material-lotes');
+        if (detalhe.open) {
+          ESTADO.materiaisExpandidos.add(material);
+          if (corpo && !corpo.innerHTML.trim()) corpo.innerHTML = listaLotesHTML(material);
+        } else {
+          ESTADO.materiaisExpandidos.delete(material);
+        }
+      });
+    });
+
+    // Delegação: um único listener para todas as caixas de lote.
+    painel.onchange = evento => {
+      const caixa = evento.target;
+      if (!caixa || caixa.type !== 'checkbox') return;
+      const conjunto = ESTADO.lotesPendentes[caixa.dataset.material];
+      if (!conjunto) return;
+      if (caixa.checked) conjunto.add(caixa.dataset.lote);
+      else conjunto.delete(caixa.dataset.lote);
+    };
+
+    // Excluir um material direto do painel (botão "×" no cabeçalho do material).
+    painel.querySelectorAll('.material-remover').forEach(botao => {
+      botao.addEventListener('click', evento => {
+        evento.preventDefault();
+        evento.stopPropagation();
+        removerMaterial(botao.dataset.material);
+      });
+    });
+    document.getElementById('aplicar-lotes').addEventListener('click', aplicarLotes);
+    document.getElementById('marcar-lotes').addEventListener('click', marcarTodosLotes);
+  }
+
+  // Remove um material do filtro e recria cores/mapa.
+  function removerMaterial(material) {
+    ESTADO.selecionados = ESTADO.selecionados.filter(m => m !== material);
+    delete ESTADO.cores[material];
+    delete ESTADO.lotes[material];
+    delete ESTADO.lotesPendentes[material];
+    ESTADO.materiaisExpandidos.delete(material);
+
+    if (!ESTADO.selecionados.length) limparFiltro();
+    else aplicarFiltro();
+  }
+
+  function listaLotesHTML(material) {
+    const item = CATALOGO.porMaterial.get(material);
+    const marcados = ESTADO.lotesPendentes[material] || new Set();
+    const lotes = [...(item ? item.lotes.keys() : [])]
+      .sort((a, b) => a.localeCompare(b, 'pt-BR', { numeric: true }));
+    return lotes.map(lote => {
+      const ativo = marcados.has(lote);
+      const quantos = item.lotes.get(lote);
+      return `<label class="lote-item">
+        <input type="checkbox" data-material="${escapar(material)}" data-lote="${escapar(lote)}" ${ativo ? 'checked' : ''}>
+        <span class="lote-nome">Lote ${escapar(rotuloLote(lote))}</span>
+        <span class="lote-contagem">${quantos} pallet(s)</span>
+      </label>`;
+    }).join('') || '<p class="lote-vazio">Sem lote.</p>';
+  }
+
+  function marcarTodosLotes() {
+    ESTADO.selecionados.forEach(material => {
+      const item = CATALOGO.porMaterial.get(material);
+      ESTADO.lotesPendentes[material] = new Set(item ? item.lotes.keys() : []);
+    });
+    renderizarPainelMateriais();
+  }
+
+  function aplicarLotes() {
+    ESTADO.lotes = {};
+    ESTADO.selecionados.forEach(material => {
+      ESTADO.lotes[material] = new Set(ESTADO.lotesPendentes[material] || []);
+    });
+    renderizarMapa();
+  }
+
+  // Materiais selecionados que casam com esta posição (respeitando os lotes)
+  function materiaisCasadosNaPosicao(posicao) {
+    return ESTADO.selecionados.filter(material =>
+      posicao.pallets.some(pallet =>
+        pallet.material === material &&
+        ESTADO.cores[pallet.material] &&
+        ESTADO.lotes[pallet.material] &&
+        ESTADO.lotes[pallet.material].has(chaveLote(pallet.lote))));
+  }
+
+  // --- Mapa (planta baixa: 1 quadrado por posição) ---
+  function criarPosicao(posicao) {
+    const botao = document.createElement('button');
+    let classes = `posicao ${posicao.estado}`;
+
+    // Sem filtro o quadrado mostra só o número; "vazia" e "!" informam o estado
+    let marca = '';
+    if (posicao.estado === 'vazia') marca = 'vazia';
+    else if (posicao.estado === 'inconsistente') marca = '!';
+
+    if (ESTADO.filtroAtivo) {
+      classes += ' filtrado';
+
+      const materiaisCasados = materiaisCasadosNaPosicao(posicao);
+
+      if (!materiaisCasados.length) {
+        classes += ' atenuada';
+      } else {
+        classes += ' destacada';
+        if (materiaisCasados.length === 1) {
+          botao.style.background = fundoMaterial(materiaisCasados[0]);
+        } else {
+          // Dois materiais na mesma posição: metade diagonal de cada cor
+          const cores = materiaisCasados.map(m => ESTADO.cores[m].cor);
+          botao.style.background =
+            `linear-gradient(135deg, ${cores[0]} 50%, ${cores[1]} 50%)`;
+        }
+      }
+    }
+
+    botao.className = classes;
+    botao.dataset.fila = posicao.fila;
+    botao.dataset.posicao = posicao.posicao;
+    botao.setAttribute('aria-label',
+      `Fila ${posicao.fila}, posição ${posicao.posicao}, ${posicao.estado}`);
+    botao.setAttribute('aria-haspopup', 'dialog');
+    botao.addEventListener('click', evento => {
+      evento.stopPropagation();
+      if (botaoSelecionado === botao && !document.getElementById('painel').hidden) {
+        fecharPainel();
+      } else {
+        abrirPainel(posicao, botao);
+      }
+    });
+
+    const numero = String(posicao.posicao).padStart(2, '0');
+    botao.innerHTML =
+      `<span class="num">${numero}</span>` +
+      (marca ? `<span class="marca">${escapar(marca)}</span>` : '');
+    atualizarSeloColeta(botao, posicao);
+    return botao;
+  }
+
+  // Quantos pallets da posição já foram coletados (0..total)
+  function contarColetados(posicao) {
+    return (posicao.pallets || []).filter(pallet =>
+      ESTADO.coletados.has(chaveColeta(pallet, posicao))).length;
+  }
+
+  // Atualiza o selo de coleta (V cheio ou contagem parcial) sem recriar a posição
+  function atualizarSeloColeta(botao, posicao) {
+    const total = (posicao.pallets || []).length;
+    const coletados = contarColetados(posicao);
+    botao.classList.toggle('coletada', total > 0 && coletados === total);
+    botao.classList.toggle('coleta-parcial', coletados > 0 && coletados < total);
+
+    let selo = botao.querySelector('.selo-coleta');
+    if (coletados > 0) {
+      if (!selo) {
+        selo = document.createElement('span');
+        selo.className = 'selo-coleta';
+        botao.appendChild(selo);
+      }
+      selo.textContent = coletados === total ? '\u2713' : `${coletados}/${total}`;
+    } else if (selo) {
+      selo.remove();
+    }
+  }
+
+  function atualizarVisualPosicao(posicao) {
+    const botao = document.querySelector(
+      `.posicao[data-fila="${posicao.fila}"][data-posicao="${posicao.posicao}"]`);
+    if (botao) atualizarSeloColeta(botao, posicao);
+  }
+
+  // Marca/desmarca a posição inteira como coletada (todos os pallets de uma vez).
+  // Na ida ao endereço o operador leva a pilha toda, então é um toque só.
+  function alternarColetaPosicao(posicao) {
+    const pallets = posicao.pallets || [];
+    if (!pallets.length) return;
+    const todosColetados = pallets.every(pallet =>
+      ESTADO.coletados.has(chaveColeta(pallet, posicao)));
+    pallets.forEach(pallet => {
+      const chave = chaveColeta(pallet, posicao);
+      if (todosColetados) ESTADO.coletados.delete(chave);
+      else ESTADO.coletados.add(chave);
+    });
+    salvarColetados();
+    atualizarVisualPosicao(posicao);
+    renderizarRodape();
+  }
+
+  function renderizarLinhaFila(fila) {
+    const linha = document.createElement('div');
+    linha.className = 'fila-linha';
+    linha.dataset.fila = fila.fila;
+
+    const rotulo = document.createElement('div');
+    rotulo.className = 'rotulo-fila';
+    rotulo.textContent = `FILA ${fila.fila}`;
+
+    const quadrados = document.createElement('div');
+    quadrados.className = 'quadrados';
+    fila.posicoes.forEach(posicao => quadrados.appendChild(criarPosicao(posicao)));
+
+    linha.appendChild(rotulo);
+    linha.appendChild(quadrados);
+    return linha;
+  }
+
+  // --- Resumo da expedição (mostrado de forma compacta no rodapé) ---
+  function calcularResumo() {
+    let pallets = 0;
+    let coletados = 0;
+    let ocupadas = 0;
+    let vazias = 0;
+    let inconsistentes = 0;
+
+    DADOS_MAPA.filas.forEach(fila => fila.posicoes.forEach(posicao => {
+      const total = (posicao.pallets || []).length;
+      const jaColetados = contarColetados(posicao);
+      pallets += total;
+      coletados += jaColetados;
+      // Posição com tudo coletado conta como livre (os pallets saíram do chão)
+      if (posicao.estado === 'vazia' || (total > 0 && jaColetados === total)) {
+        vazias += 1;
+      } else if (posicao.estado === 'ocupada') {
+        ocupadas += 1;
+      } else {
+        inconsistentes += 1;
+      }
+    }));
+
+    const totalPosicoes = ocupadas + vazias + inconsistentes;
+    const ocupacao = totalPosicoes
+      ? Math.round((ocupadas / totalPosicoes) * 100)
+      : 0;
+    return { pallets, ocupadas, vazias, inconsistentes, coletados, totalPosicoes, ocupacao };
+  }
+
+  // --- Avisos (problemas e alertas), com atalho para a posição ---
+  function itemAvisoHTML(item) {
+    const mensagem = typeof item === 'string' ? item : item.mensagem;
+    const temFila = item && item.fila !== undefined && item.fila !== null;
+    const temPosicao = item && item.posicao !== undefined && item.posicao !== null;
+    if (typeof item !== 'string' && temFila && temPosicao) {
+      return `<li><button type="button" class="aviso-item-clicavel"
+        data-fila="${item.fila}" data-posicao="${item.posicao}">
+        ${escapar(mensagem)}<span class="aviso-ir">ver no mapa</span>
+      </button></li>`;
+    }
+    return `<li>${escapar(mensagem)}</li>`;
+  }
+
+  function avisosContagem() {
+    return ((DADOS_MAPA.problemas ? DADOS_MAPA.problemas.length : 0) +
+      (DADOS_MAPA.alertas ? DADOS_MAPA.alertas.length : 0));
+  }
+
+  // Conteúdo interno da caixa de avisos (muda conforme "Entendido").
+  function avisosInternoHTML() {
+    const problemas = DADOS_MAPA.problemas || [];
+    const alertas = DADOS_MAPA.alertas || [];
+    const total = problemas.length + alertas.length;
+    if (ESTADO.avisosOcultos) {
+      return `<button type="button" id="avisos-abrir" class="aviso-discreto">` +
+        `Avisos (${total}) — tocar para ver</button>`;
+    }
+    const severidade = problemas.length ? 'erro' : 'alerta';
+    const blocos = [];
+    if (problemas.length) {
+      blocos.push('<strong class="aviso-sub">Problemas encontrados:</strong>' +
+        `<ul>${problemas.map(itemAvisoHTML).join('')}</ul>`);
+    }
+    if (alertas.length) {
+      blocos.push('<strong class="aviso-sub">Alertas:</strong>' +
+        `<ul>${alertas.map(itemAvisoHTML).join('')}</ul>`);
+    }
+    return `<div class="aviso ${severidade}" aria-live="polite">` +
+      '<div class="aviso-cabecalho">' +
+        `<strong>${total} aviso(s) — posições afetadas marcadas com !</strong>` +
+        '<button type="button" id="avisos-entendido" class="aviso-entendido">Entendido</button>' +
+      '</div>' +
+      blocos.join('') +
+      '</div>';
+  }
+
+  function renderizarAvisos() {
+    if (!avisosContagem()) return '';
+    return `<div id="avisos" class="avisos">${avisosInternoHTML()}</div>`;
+  }
+
+  function atualizarAvisos() {
+    const caixa = document.getElementById('avisos');
+    if (!caixa) return;
+    caixa.innerHTML = avisosInternoHTML();
+    conectarAvisosClicaveis();
+    conectarAvisosBotoes();
+  }
+
+  function conectarAvisosClicaveis() {
+    document.querySelectorAll('.aviso-item-clicavel').forEach(botao => {
+      botao.addEventListener('click', () => {
+        focarPosicao(Number(botao.dataset.fila), Number(botao.dataset.posicao));
+      });
+    });
+  }
+
+  function conectarAvisosBotoes() {
+    const entendido = document.getElementById('avisos-entendido');
+    if (entendido) {
+      entendido.addEventListener('click', () => {
+        ESTADO.avisosOcultos = true;
+        atualizarAvisos();
+      });
+    }
+    const abrir = document.getElementById('avisos-abrir');
+    if (abrir) {
+      abrir.addEventListener('click', () => {
+        ESTADO.avisosOcultos = false;
+        atualizarAvisos();
+      });
+    }
+  }
+
+  // Foca uma posição no mapa e abre os detalhes
+  function focarPosicao(fila, posicao) {
+    const botao = document.querySelector(
+      `.posicao[data-fila="${fila}"][data-posicao="${posicao}"]`);
+    if (!botao) return;
+    botao.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+    const dados = POSICOES_POR_CHAVE[fila + '-' + posicao];
+    if (dados) {
+      window.setTimeout(() => abrirPainel(dados, botao), 320);
+    }
+  }
+
+  function renderizarMapa() {
+    const conteudo = document.getElementById('mapa');
+    let html = renderizarAvisos();
+
+    if (!DADOS_MAPA.filas.length) {
+      html += '<p class="sem-dados">Nenhuma posição para exibir.</p>';
+      conteudo.innerHTML = html;
+      conectarAvisosClicaveis();
+      conectarAvisosBotoes();
+      renderizarPainelMateriais();
+      atualizarBotoes();
+      medirAlturas();
+      return;
+    }
+
+    html += `<div class="layout" id="layout">
+      <div class="area-mapa">
+        <div id="planta-viewport"><div class="planta" id="planta"></div></div>
+      </div>
+      <aside class="area-lateral" id="area-lateral">
+        <section class="materiais-painel" id="painel-materiais" hidden></section>
+      </aside>
+    </div>`;
+    // Preserva a rolagem atual da planta (o innerHTML abaixo a zera).
+    const viewportAnterior = document.getElementById('planta-viewport');
+    const rolagemEsquerda = viewportAnterior ? viewportAnterior.scrollLeft : 0;
+    const rolagemTopo = viewportAnterior ? viewportAnterior.scrollTop : 0;
+    conteudo.innerHTML = html;
+
+    const planta = document.getElementById('planta');
+    const porFila = new Map(DADOS_MAPA.filas.map(fila => [fila.fila, fila]));
+    // De cima para baixo: Fila 6 -> Fila 1 (a Fila 1 fica embaixo)
+    const numeros = [...porFila.keys()].sort((a, b) => b - a);
+
+    // Pares colados: (5,6), (3,4), (1,2); com um vão entre os pares
+    for (let i = 0; i < numeros.length; i += 2) {
+      if (i > 0) {
+        const corredor = document.createElement('div');
+        corredor.className = 'corredor';
+        planta.appendChild(corredor);
+      }
+      const faixa = document.createElement('div');
+      faixa.className = 'faixa-par';
+      numeros.slice(i, i + 2).forEach(n => faixa.appendChild(renderizarLinhaFila(porFila.get(n))));
+      planta.appendChild(faixa);
+    }
+
+    plantaEl = planta;
+    aplicarZoom(); // mantém a escala atual no elemento novo (evita flash em zoom 1)
+    const viewportNovo = document.getElementById('planta-viewport');
+    if (viewportNovo && (rolagemEsquerda || rolagemTopo)) {
+      viewportNovo.scrollLeft = rolagemEsquerda;
+      viewportNovo.scrollTop = rolagemTopo;
+    }
+    conectarAvisosClicaveis();
+    conectarAvisosBotoes();
+    renderizarPainelMateriais();
+    atualizarBotoes();
+    ajustarZoomInicial();
+    medirAlturas();
+  }
+
+  // --- Zoom da planta (auto-enquadrar no desktop) ---
+  const ZOOM_MIN = 0.25;
+  const ZOOM_MAX = 2;
+  let escalaZoom = 1;
+  let plantaEl = null;
+
+  function aplicarZoom() {
+    if (plantaEl) plantaEl.style.zoom = escalaZoom;
+  }
+
+  function definirZoom(novo) {
+    escalaZoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, novo));
+    aplicarZoom();
+  }
+
+  function zoomCaber() {
+    const viewport = document.getElementById('planta-viewport');
+    if (!viewport || !plantaEl) return false;
+    // Mede o tamanho natural sem alternar o zoom (evita reflow duplo e pulo visual).
+    const escalaAtual = escalaZoom || 1;
+    const retangulo = plantaEl.getBoundingClientRect();
+    const largura = retangulo.width / escalaAtual;
+    const altura = retangulo.height / escalaAtual;
+    if (largura <= 0 || altura <= 0) return false;
+    let escala = (viewport.clientWidth - 4) / largura;
+    const disponivelAltura = viewport.clientHeight - 4;
+    if (disponivelAltura > 0) escala = Math.min(escala, disponivelAltura / altura);
+    const anterior = escalaZoom;
+    definirZoom(escala);
+    return Math.abs(escalaZoom - anterior) > 0.001;
+  }
+
+  // Enquadra a planta automaticamente (somente no desktop).
+  // Reenquadra em no máximo 3 frames, parando assim que a escala estabilizar
+  // (a scrollbar pode aparecer/desaparecer entre medições, mudando o clientWidth).
+  function ajustarZoomInicial() {
+    if (!window.matchMedia('(min-width: 1024px)').matches) return;
+    let tentativas = 0;
+    const passo = () => {
+      tentativas += 1;
+      const mudou = zoomCaber();
+      if (mudou && tentativas < 3) window.requestAnimationFrame(passo);
+    };
+    window.requestAnimationFrame(passo);
+  }
+
+  // --- Balão de detalhes da posição ---
+  let botaoSelecionado = null;
+
+  function conteudoBalao(posicao) {
+    if (posicao.estado === 'vazia') {
+      return '<p class="balao-vazio">Posição vazia</p>';
+    }
+    if (!posicao.pallets.length) {
+      return '<p class="balao-vazio">Sem informação</p>';
+    }
+    const itens = palletsOrdenados(posicao).map(pallet => {
+      const coletado = ESTADO.coletados.has(chaveColeta(pallet, posicao));
+      return `<div class="balao-item${coletado ? ' coletado' : ''}">
+        <div class="balao-nome">${escapar(pallet.descricao)}</div>
+        <div class="balao-cod">Cód. ${escapar(pallet.material)}</div>
+        <div class="balao-lote">Lote ${escapar(pallet.lote)}</div>
+      </div>`;
+    }).join('');
+
+    const todosColetados = contarColetados(posicao) === posicao.pallets.length;
+    return `${itens}
+      <button type="button" class="balao-coleta" aria-pressed="${todosColetados ? 'true' : 'false'}">
+        ${todosColetados ? '\u2713 Coletado' : 'Marcar coletado'}
+      </button>`;
+  }
+
+  // Liga o botão único de coleta (marca/desmarca a posição inteira)
+  function conectarBalao(posicao) {
+    const botao = document.querySelector('#painel-conteudo .balao-coleta');
+    if (!botao) return;
+    botao.addEventListener('click', evento => {
+      evento.stopPropagation();
+      alternarColetaPosicao(posicao);
+      atualizarBalao(posicao);
+    });
+  }
+
+  function posicionarBalao(balao, botao) {
+    const r = botao.getBoundingClientRect();
+    const largura = balao.offsetWidth;
+    const altura = balao.offsetHeight;
+    const margem = 8;
+
+    let esquerda = r.left + r.width / 2 - largura / 2;
+    esquerda = Math.max(margem, Math.min(esquerda, window.innerWidth - largura - margem));
+
+    let topo = r.top - altura - margem;
+    if (topo < margem) topo = r.bottom + margem;
+    topo = Math.max(margem, Math.min(topo, window.innerHeight - altura - margem));
+
+    balao.style.left = `${esquerda}px`;
+    balao.style.top = `${topo}px`;
+  }
+
+  // Redesenha o conteúdo do balão mantendo a posição (usado ao coletar)
+  function atualizarBalao(posicao) {
+    const balao = document.getElementById('painel');
+    if (!balao || balao.hidden) return;
+    document.getElementById('painel-conteudo').innerHTML = conteudoBalao(posicao);
+    conectarBalao(posicao);
+    if (botaoSelecionado) posicionarBalao(balao, botaoSelecionado);
+  }
+
+  function abrirPainel(posicao, botao) {
+    const balao = document.getElementById('painel');
+    document.getElementById('painel-conteudo').innerHTML = conteudoBalao(posicao);
+    conectarBalao(posicao);
+    balao.hidden = false;
+
+    if (botaoSelecionado) botaoSelecionado.classList.remove('selecionada');
+    botaoSelecionado = botao || null;
+    if (botaoSelecionado) botaoSelecionado.classList.add('selecionada');
+
+    posicionarBalao(balao, botao);
+  }
+
+  function fecharPainel() {
+    document.getElementById('painel').hidden = true;
+    if (botaoSelecionado) {
+      botaoSelecionado.classList.remove('selecionada');
+      botaoSelecionado = null;
+    }
+  }
+
+  // Mede a altura do cabeçalho/rodapé para o mapa preencher a área do celular.
+  function medirAlturas() {
+    const raiz = document.documentElement;
+    const header = document.querySelector('header');
+    const rodape = document.getElementById('rodape');
+    if (header && !header.hidden) {
+      raiz.style.setProperty('--alt-cabecalho', `${header.offsetHeight}px`);
+    }
+    if (rodape && !rodape.hidden) {
+      raiz.style.setProperty('--alt-rodape', `${rodape.offsetHeight}px`);
+    }
+  }
+
+  function renderizarRodape() {
+    const r = calcularResumo();
+    document.getElementById('rodape').innerHTML =
+      '<span class="legenda"><span class="amostra ocupada"></span>ocupada</span>' +
+      '<span class="legenda"><span class="amostra vazia"></span>vazia</span>' +
+      '<span class="legenda"><span class="amostra inconsistente"></span>sem dados confiáveis</span>' +
+      (r.coletados > 0
+        ? '<span class="legenda"><span class="amostra coletada"></span>coletado</span>'
+        : '') +
+      `<span class="legenda resumo-rodape">${r.pallets} pallets · ` +
+      `${r.ocupacao}% ocupado · ${r.vazias} livres` +
+      (r.coletados > 0 ? ` · ${r.coletados} coletado(s)` : '') +
+      '</span>';
+    medirAlturas();
+  }
+
+  // --- Tema claro / escuro ---
+  function aplicarTema(tema) {
+    document.documentElement.dataset.tema = tema;
+    try { localStorage.setItem('mapa-exp-tema', tema); } catch (erro) { /* ignora */ }
+    const botao = document.getElementById('botao-tema');
+    if (botao) botao.textContent = tema === 'escuro' ? 'Claro' : 'Escuro';
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', tema === 'escuro' ? '#0f1722' : '#11304f');
+  }
+
+  function alternarTema() {
+    const atual = document.documentElement.dataset.tema === 'escuro' ? 'claro' : 'escuro';
+    aplicarTema(atual);
+  }
+
+  function temaInicial() {
+    let tema = 'claro';
+    try { tema = localStorage.getItem('mapa-exp-tema') || 'claro'; } catch (erro) { /* ignora */ }
+    aplicarTema(tema);
+  }
+
+  // --- Manifest (PWA) para "adicionar à tela inicial" ---
+  function registrarManifest() {
+    const marca = (DADOS_MAPA && DADOS_MAPA.marca) || APP.marca;
+    const subtitulo = (DADOS_MAPA && DADOS_MAPA.subtitulo) || APP.subtitulo;
+    const manifest = {
+      name: `${marca} — ${subtitulo}`,
+      short_name: marca,
+      start_url: '.',
+      display: 'standalone',
+      background_color: '#f2f4f7',
+      theme_color: '#11304f',
+      icons: [],
+    };
+    try {
+      const blob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+      const antigo = document.querySelector('link[rel="manifest"]');
+      if (antigo) antigo.remove();
+      const link = document.createElement('link');
+      link.rel = 'manifest';
+      link.href = URL.createObjectURL(blob);
+      document.head.appendChild(link);
+    } catch (erro) { /* ambiente sem suporte */ }
+  }
+
+  // --- Tela de upload (processa tudo no navegador, sem servidor) ---
+  const UPLOAD = { lx02: null, coletor: [] };
+  let uploadIniciado = false;
+  let workerPdfOk = false;
+
+  function prepararWorkerPdf() {
+    if (workerPdfOk || typeof pdfjsLib === 'undefined') return;
+    try {
+      const alvo = document.getElementById('pdfjs-worker-b64');
+      const b64 = ((alvo && alvo.textContent) || '').trim();
+      if (!b64) return;
+      const bin = atob(b64);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      const url = URL.createObjectURL(new Blob([bytes], { type: 'application/javascript' }));
+      pdfjsLib.GlobalWorkerOptions.workerSrc = url;
+      workerPdfOk = true;
+    } catch (erro) { /* usa o worker padrão do navegador */ }
+  }
+
+  function lerArrayBuffer(arquivo) {
+    return arquivo.arrayBuffer();
+  }
+
+  function lerTexto(arquivo) {
+    return arquivo.text();
+  }
+
+  async function extrairLinhasDoPdf(arquivo) {
+    prepararWorkerPdf();
+    const ab = await lerArrayBuffer(arquivo);
+    const doc = await pdfjsLib.getDocument({
+      data: new Uint8Array(ab),
+      isEvalSupported: false,
+    }).promise;
+    const linhas = [];
+    for (let p = 1; p <= doc.numPages; p++) {
+      const pagina = await doc.getPage(p);
+      const conteudo = await pagina.getTextContent();
+      const doPagina = MapaCore.linhasDeItens(conteudo.items);
+      for (let i = 0; i < doPagina.length; i++) linhas.push(doPagina[i]);
+    }
+    try { await doc.destroy(); } catch (erro) { /* ignora */ }
+    return linhas;
+  }
+
+  function formatarAgora() {
+    const agora = new Date();
+    const p = n => String(n).padStart(2, '0');
+    return `${p(agora.getDate())}/${p(agora.getMonth() + 1)}/${agora.getFullYear()} ` +
+      `${p(agora.getHours())}:${p(agora.getMinutes())}`;
+  }
+
+  function classificarArquivo(nome) {
+    const extensao = (nome.split('.').pop() || '').toLowerCase();
+    if (extensao === 'xlsx' || extensao === 'xls') return 'lx02';
+    if (extensao === 'pdf') return 'pdf';
+    if (extensao === 'txt') return 'txt';
+    return 'outro';
+  }
+
+  function renderizarListaUpload() {
+    const lista = document.getElementById('upload-lista');
+    const itens = [];
+    if (UPLOAD.lx02) itens.push({ tipo: 'LX02', nome: UPLOAD.lx02.name });
+    UPLOAD.coletor.forEach((f) => {
+      itens.push({ tipo: classificarArquivo(f.name).toUpperCase(), nome: f.name });
+    });
+    if (!itens.length) {
+      lista.hidden = true;
+      lista.innerHTML = '';
+      return;
+    }
+    lista.hidden = false;
+    lista.innerHTML = itens.map((item) =>
+      `<li><span class="tipo">${escapar(item.tipo)}</span><span class="nome">${escapar(item.nome)}</span></li>`
+    ).join('');
+    document.getElementById('upload-processar').disabled =
+      !(UPLOAD.lx02 && UPLOAD.coletor.length);
+  }
+
+  function adicionarArquivos(arquivos) {
+    const msgs = [];
+    for (let i = 0; i < arquivos.length; i++) {
+      const arquivo = arquivos[i];
+      const tipo = classificarArquivo(arquivo.name);
+      if (tipo === 'lx02') {
+        UPLOAD.lx02 = arquivo;
+      } else if (tipo === 'pdf' || tipo === 'txt') {
+        UPLOAD.coletor.push(arquivo);
+      } else {
+        msgs.push({ tipo: 'erro', mensagem: `Formato não suportado: ${arquivo.name}` });
+      }
+    }
+    mostrarMsgsUpload(msgs);
+    renderizarListaUpload();
+  }
+
+  function mostrarMsgsUpload(msgs) {
+    const caixa = document.getElementById('upload-msgs');
+    if (!msgs || !msgs.length) {
+      caixa.hidden = true;
+      caixa.innerHTML = '';
+      return;
+    }
+    caixa.hidden = false;
+    caixa.innerHTML = msgs.map((m) =>
+      `<div class="msg ${m.tipo === 'erro' ? 'erro' : 'aviso'}">${escapar(m.mensagem)}</div>`
+    ).join('');
+  }
+
+  function abrirTelaUpload() {
+    document.querySelector('header').hidden = true;
+    document.getElementById('mapa').hidden = true;
+    document.getElementById('rodape').hidden = true;
+    document.getElementById('upload').hidden = false;
+    document.getElementById('upload-cancelar').hidden = !DADOS_MAPA;
+    renderizarListaUpload();
+  }
+
+  function voltarAoMapa() {
+    if (!DADOS_MAPA) return;
+    document.getElementById('upload').hidden = true;
+    document.querySelector('header').hidden = false;
+    document.getElementById('mapa').hidden = false;
+    document.getElementById('rodape').hidden = false;
+  }
+
+  async function processarUpload() {
+    const progresso = document.getElementById('upload-progresso');
+    const progressoTxt = document.getElementById('upload-progresso-txt');
+    const msgs = [];
+
+    document.getElementById('upload-processar').disabled = true;
+    progresso.hidden = false;
+    progressoTxt.textContent = 'Lendo a LX02…';
+
+    let lx02 = null;
+    if (!UPLOAD.lx02) {
+      mostrarMsgsUpload([{ tipo: 'erro', mensagem: 'Selecione a exportação da LX02 (.xlsx).' }]);
+      document.getElementById('upload-processar').disabled = false;
+      progresso.hidden = true;
+      return;
+    }
+    try {
+      const ab = await lerArrayBuffer(UPLOAD.lx02);
+      lx02 = MapaCore.carregarLx02(ab);
+    } catch (erro) {
+      msgs.push({ tipo: 'erro', mensagem: 'Falha ao ler a LX02: ' + erro.message });
+    }
+
+    const pdfs = UPLOAD.coletor.filter((f) => classificarArquivo(f.name) === 'pdf');
+    const txts = UPLOAD.coletor.filter((f) => classificarArquivo(f.name) === 'txt');
+    let coletor;
+    try {
+      if (pdfs.length) {
+        progressoTxt.textContent = 'Lendo o PDF da bipagem…';
+        const arquivosPdf = [];
+        for (let i = 0; i < pdfs.length; i++) {
+          const linhas = await extrairLinhasDoPdf(pdfs[i]);
+          arquivosPdf.push({ nome: pdfs[i].name, linhas });
+        }
+        coletor = MapaCore.processarPdf(arquivosPdf);
+      } else if (txts.length) {
+        progressoTxt.textContent = 'Lendo o TXT do coletor…';
+        const texto = await lerTexto(txts[0]);
+        coletor = MapaCore.processarTxt(texto, txts[0].name);
+      } else {
+        coletor = {
+          registros: [], posicoes_vazias: [], alertas: [],
+          problemas: [{
+            tipo: 'formato_nao_suportado',
+            mensagem: 'Nenhum arquivo .pdf ou .txt informado',
+          }],
+        };
+      }
+    } catch (erro) {
+      coletor = {
+        registros: [], posicoes_vazias: [], alertas: [],
+        problemas: [{
+          tipo: 'erro_leitura_coletor',
+          mensagem: 'Falha ao ler o coletor: ' + erro.message,
+        }],
+      };
+    }
+
+    const nomesColetor = UPLOAD.coletor.map((f) => f.name).join(', ');
+    const payload = MapaCore.montarPayload(coletor, lx02, {
+      lx02: UPLOAD.lx02 ? UPLOAD.lx02.name : '',
+      coletor: nomesColetor,
+    });
+    payload.marca = APP.marca;
+    payload.subtitulo = APP.subtitulo;
+    payload.versao = APP.versao;
+    payload.gerado_em = formatarAgora();
+
+    progresso.hidden = true;
+    document.getElementById('upload-processar').disabled = false;
+
+    const problemas = payload.problemas || [];
+    if (problemas.some((p) => p.tipo === 'coluna_ausente' || p.tipo === 'erro_leitura_lx02')) {
+      mostrarMsgsUpload(msgs.concat(problemas.map((p) => ({ tipo: 'erro', mensagem: p.mensagem }))));
+      return;
+    }
+
+    aplicarPayload(payload);
+  }
+
+  function aplicarPayload(payload) {
+    DADOS_MAPA = payload;
+    ESTADO.avisosOcultos = false;
+    inicializarDados();
+    document.getElementById('upload').hidden = true;
+    document.querySelector('header').hidden = false;
+    document.getElementById('mapa').hidden = false;
+    document.getElementById('rodape').hidden = false;
+    document.getElementById('marca').textContent = payload.marca || APP.marca;
+    document.getElementById('subtitulo').textContent =
+      `Última atualização: ${payload.gerado_em}`;
+    document.title = payload.marca || APP.marca;
+    registrarManifest();
+    renderizarRodape();
+    renderizarMapa();
+  }
+
+  function iniciarTelaUpload() {
+    if (!uploadIniciado) {
+      uploadIniciado = true;
+      document.getElementById('upload-lx02').addEventListener('change', (evento) => {
+        adicionarArquivos(evento.target.files);
+        evento.target.value = '';
+      });
+      document.getElementById('upload-coletor').addEventListener('change', (evento) => {
+        adicionarArquivos(evento.target.files);
+        evento.target.value = '';
+      });
+      document.getElementById('upload-processar').addEventListener('click', processarUpload);
+      document.getElementById('upload-cancelar').addEventListener('click', voltarAoMapa);
+
+      const area = document.getElementById('upload-area');
+      area.addEventListener('dragover', (evento) => {
+        evento.preventDefault();
+        area.classList.add('sobre');
+      });
+      area.addEventListener('dragleave', () => area.classList.remove('sobre'));
+      area.addEventListener('drop', (evento) => {
+        evento.preventDefault();
+        area.classList.remove('sobre');
+        if (evento.dataTransfer && evento.dataTransfer.files) {
+          adicionarArquivos(evento.dataTransfer.files);
+        }
+      });
+    }
+    abrirTelaUpload();
+  }
+
+  // --- Ligação dos eventos ---
+  document.getElementById('busca').addEventListener('input', atualizarResultados);
+  document.getElementById('busca').addEventListener('focus', atualizarResultados);
+  document.getElementById('aplicar').addEventListener('click', aplicarFiltro);
+  document.getElementById('limpar-filtro').addEventListener('click', limparFiltro);
+  document.getElementById('botao-tema').addEventListener('click', alternarTema);
+  document.getElementById('painel-fechar').addEventListener('click', fecharPainel);
+  document.getElementById('painel').addEventListener('click', evento => evento.stopPropagation());
+  document.addEventListener('click', fecharPainel);
+  window.addEventListener('scroll', fecharPainel, true);
+  document.addEventListener('keydown', evento => {
+    if (evento.key === 'Escape') fecharPainel();
+  });
+
+  // Reenquadra a planta ao redimensionar (desktop)
+  let tempoResize = null;
+  window.addEventListener('resize', () => {
+    if (tempoResize) window.clearTimeout(tempoResize);
+    tempoResize = window.setTimeout(() => {
+      medirAlturas();
+      if (DADOS_MAPA && window.matchMedia('(min-width: 1024px)').matches) zoomCaber();
+    }, 150);
+  });
+
+  // --- Início ---
+  temaInicial();
+  registrarManifest();
+  document.getElementById('botao-arquivos').addEventListener('click', iniciarTelaUpload);
+  if (DADOS_MAPA) {
+    inicializarDados();
+    document.getElementById('marca').textContent = DADOS_MAPA.marca || 'Mapa EXP';
+    document.getElementById('subtitulo').textContent =
+      `Última atualização: ${DADOS_MAPA.gerado_em}`;
+    document.title = DADOS_MAPA.marca || 'Mapa EXP';
+    renderizarRodape();
+    renderizarMapa();
+  } else {
+    iniciarTelaUpload();
+  }
+</script>
+</body>
+</html>

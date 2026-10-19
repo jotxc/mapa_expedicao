@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Dados de entrada (contêm informação real da empresa) — NÃO versionar
+data/input/*
+!data/input/.gitkeep
+
+# Artefatos gerados (reproduzíveis pelos scripts) — NÃO versionar
+dist/*
+!dist/.gitkeep
+
+# Travas/arquivos temporários do Excel
+~$*
+
+# Node (usado apenas pelos testes)
+node_modules/
