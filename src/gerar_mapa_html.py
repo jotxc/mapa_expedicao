@@ -10,6 +10,7 @@ from mapa_dados import (
     DIR_SAIDA,
     DIR_VENDOR,
     DIR_WEB,
+    _texto,
     estruturar_filas,
     montar_mapa,
     resolver_entrada,
@@ -89,6 +90,63 @@ def injetar_template(payload, caminho_saida):
     arquivo.write(html)
 
 
+def _montar_lx02_livres(resultado):
+  """UDs da LX02 ainda sem posição na bipagem, agrupadas por material.
+
+  Formato consumido pela tela (seletor de "adicionar pallet"):
+    [{'material', 'descricao', 'lotes': [{'lote', 'pallets'}]}]
+  """
+  df_sap = resultado.get('df_sap')
+  df_fisico = resultado.get('df_fisico')
+  if df_sap is None or len(df_sap) == 0:
+    return []
+
+  usadas = set()
+  if df_fisico is not None and len(df_fisico) > 0:
+    usadas = {str(ud) for ud in df_fisico['UD_chave']}
+
+  por_material = {}
+  ordem = []
+  vistos = set()
+  for _, linha in df_sap.iterrows():
+    ud = str(linha['UD_chave'])
+    if ud in usadas or ud in vistos:
+      continue
+    vistos.add(ud)
+
+    material = _texto(linha['Material'])
+    if material is None:
+      continue
+    descricao = _texto(linha['Texto breve de material'])
+    if material not in por_material:
+      por_material[material] = {
+          'material': material, 'descricao': descricao, 'lotes': {},
+      }
+      ordem.append(material)
+    elif por_material[material]['descricao'] is None:
+      por_material[material]['descricao'] = descricao
+
+    lote = _texto(linha['Lote'])
+    chave = '' if lote is None else str(lote)
+    por_material[material]['lotes'][chave] = (
+        por_material[material]['lotes'].get(chave, 0) + 1
+    )
+
+  livres = []
+  for material in ordem:
+    info = por_material[material]
+    lotes = [
+        {'lote': chave, 'pallets': total}
+        for chave, total in info['lotes'].items()
+    ]
+    livres.append({
+        'material': info['material'],
+        'descricao': info['descricao'],
+        'lotes': lotes,
+    })
+  return livres
+
+
 def montar_payload(resultado, arquivos):
   """Monta o dicionário de dados que a tela consome."""
   return {
@@ -104,6 +162,7 @@ def montar_payload(resultado, arquivos):
       ),
       'problemas': resultado['problemas'],
       'alertas': resultado['alertas'],
+      'lx02_livres': _montar_lx02_livres(resultado),
   }
 
 

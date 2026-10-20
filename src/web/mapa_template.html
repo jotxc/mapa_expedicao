@@ -300,7 +300,7 @@
 
   /* Layout em colunas (mapa + painel lateral) */
   .layout { display: block; }
-  .area-mapa { min-width: 0; }
+  .area-mapa { min-width: 0; position: relative; }
   .area-lateral { display: flex; flex-direction: column; gap: 12px; }
 
   /* Desktop: tela cheia (mapa + legenda + descrições), sem rolagem da página */
@@ -446,7 +446,68 @@
     background: var(--planta-bg);
   }
   .quadrados { display: flex; gap: 3px; }
+
+  /* Camada com as setas que apontam para pallets fora da área visível.
+     Fica sobre o viewport (não rola com o conteúdo) e na altura da fila. */
+  #sinais-borda {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 5;
+  }
+  #sinais-borda[hidden] { display: none; }
+  .sinal-borda {
+    position: absolute;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: 800;
+    line-height: 1;
+    color: #fff;
+    background: var(--ocupada);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  }
+  .sinal-borda.direita { right: 6px; }
+  .sinal-borda.esquerda { left: 6px; }
   .corredor { height: 34px; }
+
+  /* Badge de "pallet fora da tela" quando há filtro: pílula fixa na borda
+     direita da viewport com a cor do material, a posição e uma seta. */
+  #indicador-busca {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 6;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 16px;
+    background: #fff;
+    color: #1b2430;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+    pointer-events: none;
+  }
+  #indicador-busca[hidden] { display: none; }
+  .indicador-cor {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+  }
+  .indicador-cor svg { width: 11px; height: 11px; display: block; }
 
   .posicao {
     position: relative;
@@ -533,6 +594,9 @@
     display: flex;
     gap: 14px;
     flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
     font-size: 0.72rem;
     color: var(--texto-fraco);
   }
@@ -545,14 +609,14 @@
   footer .amostra.vazia { background: var(--cartao); border-style: dashed; }
   footer .amostra.inconsistente { background: var(--inconsistente-bg); border-color: var(--alerta); }
   footer .amostra.coletada { background: var(--coleta-clara); border-color: var(--coleta); }
-  footer .resumo-rodape { margin-left: auto; font-weight: 600; color: var(--texto); }
+  footer .resumo-rodape { font-weight: 600; color: var(--texto); text-align: center; }
 
   .sem-dados { text-align: center; color: var(--texto-fraco); padding: 40px 16px; }
 
   /* Balão de detalhes (abre ao tocar numa posição) */
   .balao {
     position: fixed;
-    z-index: 20;
+    z-index: 40;
     max-width: min(260px, calc(100vw - 16px));
     background: var(--cartao);
     border: 1px solid var(--borda);
@@ -605,6 +669,110 @@
   .balao-item.coletado .balao-cod,
   .balao-item.coletado .balao-lote { text-decoration: line-through; opacity: 0.6; }
   .posicao.selecionada { outline: 3px solid #11304f; outline-offset: 2px; }
+
+  /* Adicionar pallet manualmente (dentro do balão) */
+  .balao-add { margin-top: 8px; }
+  .balao-add-abrir {
+    width: 100%;
+    min-height: 40px;
+    border-radius: 8px;
+    border: 1px dashed var(--ocupada);
+    background: transparent;
+    color: var(--ocupada);
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .balao-add-abrir[hidden] { display: none; }
+  .balao-add-form { display: flex; flex-direction: column; gap: 6px; }
+  .balao-add-form[hidden] { display: none; }
+  .balao-busca, .balao-ud {
+    width: 100%;
+    font: inherit;
+    font-size: 0.82rem;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--borda);
+    background: var(--pos-bg);
+    color: var(--texto);
+  }
+  .balao-sugestoes {
+    max-height: 150px;
+    overflow-y: auto;
+    border: 1px solid var(--borda);
+    border-radius: 8px;
+  }
+  .balao-sugestoes:empty { display: none; }
+  .balao-sugestao {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 7px 9px;
+    border: none;
+    border-bottom: 1px solid var(--borda);
+    background: transparent;
+    color: var(--texto);
+    font: inherit;
+    font-size: 0.78rem;
+    cursor: pointer;
+  }
+  .balao-sugestao:last-child { border-bottom: none; }
+  .balao-sugestao:hover, .balao-sugestao.selecionado { background: var(--ocupada-clara); }
+  .balao-sugestao-sub, .balao-lote-op-sub {
+    display: block;
+    color: var(--texto-fraco);
+    font-size: 0.7rem;
+    margin-top: 2px;
+  }
+  .balao-rotulo { font-size: 0.72rem; color: var(--texto-fraco); font-weight: 600; }
+  .balao-lotes { display: flex; flex-direction: column; gap: 4px; }
+  .balao-lotes[hidden] { display: none; }
+  .balao-lote-op {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 6px 9px;
+    border: 1px solid var(--borda);
+    border-radius: 8px;
+    background: var(--pos-bg);
+    color: var(--texto);
+    font: inherit;
+    font-size: 0.78rem;
+    cursor: pointer;
+  }
+  .balao-lote-op.selecionado { border-color: var(--ocupada); background: var(--ocupada-clara); }
+  .balao-add-erro { margin: 0; font-size: 0.74rem; color: var(--erro); }
+  .balao-add-erro[hidden] { display: none; }
+  .balao-add-acoes { display: flex; gap: 6px; }
+  .balao-add-acoes .botao-primario,
+  .balao-add-acoes .botao-secundario { flex: 1; min-height: 38px; font-size: 0.8rem; padding: 0 8px; }
+  .balao-tag {
+    display: inline-block;
+    margin-left: 4px;
+    padding: 0 5px;
+    border-radius: 4px;
+    background: var(--alerta);
+    color: #fff;
+    font-size: 0.58rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    vertical-align: middle;
+  }
+  .balao-remover {
+    margin-top: 6px;
+    min-height: 32px;
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid var(--borda);
+    background: transparent;
+    color: var(--texto-fraco);
+    font: inherit;
+    font-size: 0.74rem;
+    cursor: pointer;
+  }
+  .balao-remover:hover { border-color: var(--erro); color: var(--erro); }
 
   /* Impressão / PDF */
   @media print {
@@ -856,6 +1024,29 @@
       localStorage.setItem(chaveArmazenamentoColeta(),
         JSON.stringify([...ESTADO.coletados]));
     } catch (erro) { /* ignora */ }
+  }
+
+  // --- Sessão do dia (mapa + adições manuais) ---
+  // Guarda o payload inteiro no aparelho, para o operador reabrir o arquivo
+  // sem precisar subir tudo de novo. Um novo upload substitui a sessão.
+  const CHAVE_SESSAO = 'mapa-exp-sessao';
+
+  function salvarSessao(dados) {
+    dados = dados || DADOS_MAPA;
+    if (!dados) return;
+    try {
+      localStorage.setItem(CHAVE_SESSAO, JSON.stringify(dados));
+    } catch (erro) { /* armazenamento cheio/indisponível: segue sem persistir */ }
+  }
+
+  function carregarSessao() {
+    try {
+      const bruto = localStorage.getItem(CHAVE_SESSAO);
+      if (!bruto) return null;
+      const dados = JSON.parse(bruto);
+      if (!dados || !Array.isArray(dados.filas)) return null;
+      return dados;
+    } catch (erro) { return null; }
   }
 
   // Lote pode vir como número no JSON; usar sempre texto evita erro de tipo.
@@ -1351,7 +1542,7 @@
     const total = problemas.length + alertas.length;
     if (ESTADO.avisosOcultos) {
       return `<button type="button" id="avisos-abrir" class="aviso-discreto">` +
-        `Avisos (${total}) — tocar para ver</button>`;
+        `Avisos (${total}) — toque para ver</button>`;
     }
     const severidade = problemas.length ? 'erro' : 'alerta';
     const blocos = [];
@@ -1440,6 +1631,8 @@
     html += `<div class="layout" id="layout">
       <div class="area-mapa">
         <div id="planta-viewport"><div class="planta" id="planta"></div></div>
+        <div id="sinais-borda" hidden></div>
+        <div id="indicador-busca" hidden></div>
       </div>
       <aside class="area-lateral" id="area-lateral">
         <section class="materiais-painel" id="painel-materiais" hidden></section>
@@ -1482,6 +1675,108 @@
     atualizarBotoes();
     ajustarZoomInicial();
     medirAlturas();
+    atualizarSinaisLaterais();
+  }
+
+  // Coloca setas flutuantes nas bordas do viewport, na altura (Y) de cada fila
+  // que tem pallet não coletado fora da área visível. Direita = há pallet mais à
+  // direita; esquerda = há pallet mais à esquerda. Desaparecem ao chegar no pallet.
+  function atualizarSinaisLaterais() {
+    const viewport = document.getElementById('planta-viewport');
+    const camada = document.getElementById('sinais-borda');
+    if (!viewport || !camada) return;
+    const areaViewport = viewport.getBoundingClientRect();
+    const area = camada.getBoundingClientRect(); // container da camada
+    if (!areaViewport.width || !area.height) { camada.hidden = true; return; }
+
+    camada.innerHTML = '';
+    camada.hidden = false;
+    const esquerdaVisivel = areaViewport.left + 2;
+    const direitaVisivel = areaViewport.right - 2;
+
+    document.querySelectorAll('.fila-linha').forEach(linha => {
+      const alvos = linha.querySelectorAll(
+        '.posicao.ocupada:not(.coletada):not(.coleta-parcial)');
+      if (!alvos.length) return;
+
+      let foraDireita = false;
+      let foraEsquerda = false;
+      let topoY = null;
+      Array.prototype.forEach.call(alvos, pos => {
+        const r = pos.getBoundingClientRect();
+        if (!r.width) return;
+        if (r.left >= direitaVisivel) foraDireita = true;
+        else if (r.right <= esquerdaVisivel) foraEsquerda = true;
+        else if (topoY === null) topoY = r.top;
+      });
+      if (topoY === null && (foraDireita || foraEsquerda)) {
+        // Nenhum pallet visível agora: ancora na altura média da fila.
+        const rl = linha.getBoundingClientRect();
+        topoY = rl.top + rl.height / 2;
+      }
+      const y = Math.min(Math.max(topoY - area.top, 14), area.height - 14);
+
+      const criar = (lado, seta) => {
+        const sinal = document.createElement('div');
+        sinal.className = `sinal-borda ${lado}`;
+        sinal.style.top = `${y}px`;
+        sinal.textContent = seta;
+        sinal.title = lado === 'direita'
+          ? 'Há pallet mais à direita nesta fila'
+          : 'Há pallet mais à esquerda nesta fila';
+        camada.appendChild(sinal);
+      };
+      if (foraDireita) criar('direita', '\u203A');
+      if (foraEsquerda) criar('esquerda', '\u2039');
+    });
+    atualizarIndicadorBusca();
+  }
+
+  // Ícone de pallet em SVG (branco), usado só dentro do badge de busca.
+  const ICONE_PALLET_SVG =
+    '<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">' +
+    '<rect x="1" y="9" width="14" height="3" rx="0.6" fill="#fff"/>' +
+    '<rect x="2" y="12.6" width="2.4" height="2.4" rx="0.5" fill="#fff"/>' +
+    '<rect x="6.8" y="12.6" width="2.4" height="2.4" rx="0.5" fill="#fff"/>' +
+    '<rect x="11.6" y="12.6" width="2.4" height="2.4" rx="0.5" fill="#fff"/>' +
+    '<rect x="2" y="4.4" width="5.2" height="4" rx="0.7" fill="#fff" opacity="0.9"/>' +
+    '<rect x="8.6" y="2.6" width="5.4" height="5.8" rx="0.7" fill="#fff" opacity="0.75"/>' +
+    '</svg>';
+
+  // Badge global na borda direita: com filtro ativo, mostra o match mais
+  // próximo (à direita) que está fora da viewport. Some quando o pallet alvo
+  // entra na tela ou o filtro é limpo. As setas ›‹ genéricas não são afetadas.
+  function atualizarIndicadorBusca() {
+    const badge = document.getElementById('indicador-busca');
+    const viewport = document.getElementById('planta-viewport');
+    if (!badge || !viewport) return;
+
+    if (!ESTADO.filtroAtivo) { badge.hidden = true; return; }
+
+    const area = viewport.getBoundingClientRect();
+    if (!area.width) { badge.hidden = true; return; }
+    const direitaVisivel = area.right - 2;
+
+    let alvo = null;
+    let alvoEsquerda = Infinity;
+    document.querySelectorAll('.posicao.destacada:not(.coletada):not(.coleta-parcial)')
+      .forEach(pos => {
+        const r = pos.getBoundingClientRect();
+        // Alvo = ainda não entrou totalmente pela borda direita (inclui o que
+        // está só meio visível). Passou totalmente para a esquerda: ignorado.
+        if (!r.width || r.right <= direitaVisivel) return;
+        if (r.left < alvoEsquerda) { alvo = pos; alvoEsquerda = r.left; }
+      });
+
+    if (!alvo) { badge.hidden = true; return; }
+
+    const numero = String(alvo.dataset.posicao).padStart(2, '0');
+    badge.innerHTML =
+      `<span class="indicador-cor" style="background:${alvo.style.background}">` +
+      `${ICONE_PALLET_SVG}</span>` +
+      `<span>Pos. ${numero}</span>` +
+      '<span aria-hidden="true">\u2192</span>';
+    badge.hidden = false;
   }
 
   // --- Zoom da planta (auto-enquadrar no desktop) ---
@@ -1533,38 +1828,347 @@
   // --- Balão de detalhes da posição ---
   let botaoSelecionado = null;
 
-  function conteudoBalao(posicao) {
-    if (posicao.estado === 'vazia') {
-      return '<p class="balao-vazio">Posição vazia</p>';
-    }
-    if (!posicao.pallets.length) {
-      return '<p class="balao-vazio">Sem informação</p>';
-    }
-    const itens = palletsOrdenados(posicao).map(pallet => {
-      const coletado = ESTADO.coletados.has(chaveColeta(pallet, posicao));
-      return `<div class="balao-item${coletado ? ' coletado' : ''}">
-        <div class="balao-nome">${escapar(pallet.descricao)}</div>
-        <div class="balao-cod">Cód. ${escapar(pallet.material)}</div>
-        <div class="balao-lote">Lote ${escapar(pallet.lote)}</div>
-      </div>`;
-    }).join('');
-
-    const todosColetados = contarColetados(posicao) === posicao.pallets.length;
-    return `${itens}
-      <button type="button" class="balao-coleta" aria-pressed="${todosColetados ? 'true' : 'false'}">
-        ${todosColetados ? '\u2713 Coletado' : 'Marcar coletado'}
-      </button>`;
+  function balaoItemHTML(pallet, posicao) {
+    const coletado = ESTADO.coletados.has(chaveColeta(pallet, posicao));
+    const tag = pallet.manual ? ' <span class="balao-tag">adicionado</span>' : '';
+    const remover = `<button type="button" class="balao-remover" data-emp="${pallet.empilhamento}">Remover</button>`;
+    return `<div class="balao-item${coletado ? ' coletado' : ''}">
+      <div class="balao-nome">${escapar(pallet.descricao)}${tag}</div>
+      <div class="balao-cod">Cód. ${escapar(pallet.material)}</div>
+      <div class="balao-lote">Lote ${escapar(pallet.lote)}</div>
+      ${remover}
+    </div>`;
   }
 
-  // Liga o botão único de coleta (marca/desmarca a posição inteira)
+  function balaoAdicionarHTML() {
+    return `<div class="balao-add">
+      <button type="button" class="balao-add-abrir" id="balao-add-abrir">+ Adicionar pallet</button>
+      <div class="balao-add-form" id="balao-add-form" hidden>
+        <input type="search" id="balao-material" class="balao-busca" placeholder="Material ou descrição" autocomplete="off">
+        <div class="balao-sugestoes" id="balao-sugestoes"></div>
+        <div class="balao-lotes" id="balao-lotes" hidden></div>
+        <input type="text" id="balao-ud" class="balao-ud" inputmode="numeric" maxlength="10" placeholder="UD (opcional)">
+        <p class="balao-add-erro" id="balao-add-erro" hidden></p>
+        <div class="balao-add-acoes">
+          <button type="button" class="botao-primario" id="balao-add-confirmar" disabled>Adicionar</button>
+          <button type="button" class="botao-secundario" id="balao-add-cancelar">Cancelar</button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function conteudoBalao(posicao) {
+    const pallets = palletsOrdenados(posicao);
+    let html = pallets.length
+      ? pallets.map(pallet => balaoItemHTML(pallet, posicao)).join('')
+      : '<p class="balao-vazio">Posição vazia</p>';
+
+    const temLivres = (DADOS_MAPA.lx02_livres || []).length > 0;
+    if (pallets.length < 2 && temLivres) html += balaoAdicionarHTML();
+
+    if (pallets.length) {
+      const todosColetados = contarColetados(posicao) === pallets.length;
+      html += `<button type="button" class="balao-coleta" aria-pressed="${todosColetados ? 'true' : 'false'}">
+        ${todosColetados ? '\u2713 Coletado' : 'Marcar coletado'}
+      </button>`;
+    }
+    return html;
+  }
+
+  // Liga a coleta, o remover e o formulário de adicionar pallet.
   function conectarBalao(posicao) {
-    const botao = document.querySelector('#painel-conteudo .balao-coleta');
-    if (!botao) return;
-    botao.addEventListener('click', evento => {
+    const coletar = document.querySelector('#painel-conteudo .balao-coleta');
+    if (coletar) coletar.addEventListener('click', evento => {
       evento.stopPropagation();
       alternarColetaPosicao(posicao);
       atualizarBalao(posicao);
     });
+
+    document.querySelectorAll('#painel-conteudo .balao-remover').forEach(botao => {
+      botao.addEventListener('click', evento => {
+        evento.stopPropagation();
+        removerPalletManual(posicao, Number(botao.dataset.emp));
+      });
+    });
+
+    const abrir = document.getElementById('balao-add-abrir');
+    const form = document.getElementById('balao-add-form');
+    if (abrir) abrir.addEventListener('click', evento => {
+      evento.stopPropagation();
+      abrirFormularioAdd();
+    });
+    const cancelar = document.getElementById('balao-add-cancelar');
+    if (cancelar) cancelar.addEventListener('click', evento => {
+      evento.stopPropagation();
+      if (form) form.hidden = true;
+      if (abrir) abrir.hidden = false;
+    });
+    const confirmar = document.getElementById('balao-add-confirmar');
+    if (confirmar) confirmar.addEventListener('click', evento => {
+      evento.stopPropagation();
+      adicionarPalletNaPosicao(posicao);
+    });
+    if (form) form.addEventListener('click', evento => evento.stopPropagation());
+
+    const busca = document.getElementById('balao-material');
+    if (busca) {
+      busca.addEventListener('input', renderSugestoesBalao);
+      busca.addEventListener('focus', renderSugestoesBalao);
+    }
+    const ud = document.getElementById('balao-ud');
+    if (ud) ud.addEventListener('keydown', evento => {
+      if (evento.key === 'Enter') {
+        evento.preventDefault();
+        adicionarPalletNaPosicao(posicao);
+      }
+    });
+  }
+
+  // --- Adicionar/remover pallet manualmente ---
+  let BALAO_ADD = { indice: null, material: null, lote: null };
+
+  // Índice material -> { descricao, lotes: Map(lote -> pallets livres) }.
+  function livresIndex() {
+    const porMaterial = new Map();
+    (DADOS_MAPA.lx02_livres || []).forEach(item => {
+      if (item.material === null || item.material === undefined) return;
+      const material = String(item.material);
+      if (!porMaterial.has(material)) {
+        porMaterial.set(material, { material, descricao: item.descricao, lotes: new Map() });
+      }
+      const info = porMaterial.get(material);
+      if (!info.descricao && item.descricao) info.descricao = item.descricao;
+      (item.lotes || []).forEach(itemLote => {
+        const chave = chaveLote(itemLote.lote);
+        info.lotes.set(chave, (info.lotes.get(chave) || 0) + (Number(itemLote.pallets) || 0));
+      });
+    });
+    return porMaterial;
+  }
+
+  function totalLotes(info) {
+    let total = 0;
+    info.lotes.forEach(quantidade => { total += quantidade; });
+    return total;
+  }
+
+  function materiaisLivresQueCasam(termo, indice) {
+    const alvo = normalizar(termo);
+    const achados = [];
+    indice.forEach(info => {
+      if (!alvo || normalizar(info.material).includes(alvo) ||
+          normalizar(info.descricao).includes(alvo)) {
+        achados.push(info);
+      }
+    });
+    achados.sort((a, b) =>
+      String(a.material).localeCompare(String(b.material), 'pt-BR', { numeric: true }));
+    return achados;
+  }
+
+  function abrirFormularioAdd() {
+    BALAO_ADD = { indice: livresIndex(), material: null, lote: null };
+    const abrir = document.getElementById('balao-add-abrir');
+    const form = document.getElementById('balao-add-form');
+    if (abrir) abrir.hidden = true;
+    if (form) form.hidden = false;
+    const erro = document.getElementById('balao-add-erro');
+    if (erro) erro.hidden = true;
+    const lotes = document.getElementById('balao-lotes');
+    if (lotes) { lotes.hidden = true; lotes.innerHTML = ''; }
+    const ud = document.getElementById('balao-ud');
+    if (ud) ud.value = '';
+    const busca = document.getElementById('balao-material');
+    if (busca) busca.value = '';
+    renderSugestoesBalao();
+    atualizarConfirmarBalao();
+    if (busca) busca.focus();
+  }
+
+  function renderSugestoesBalao() {
+    const caixa = document.getElementById('balao-sugestoes');
+    if (!caixa) return;
+    const campoBusca = document.getElementById('balao-material');
+    const termo = campoBusca ? campoBusca.value : '';
+    const achados = materiaisLivresQueCasam(termo, BALAO_ADD.indice || new Map()).slice(0, 30);
+    if (!achados.length) {
+      caixa.innerHTML = '<p class="lote-vazio">Nenhum material disponível.</p>';
+      return;
+    }
+    caixa.innerHTML = achados.map(info => {
+      const selecionado = info.material === BALAO_ADD.material ? ' selecionado' : '';
+      return `<button type="button" class="balao-sugestao${selecionado}" data-material="${escapar(info.material)}">
+        <strong>${escapar(info.material)}</strong> — ${escapar(info.descricao || '(sem descrição)')}
+        <span class="balao-sugestao-sub">${totalLotes(info)} pallet(s) livre(s)</span>
+      </button>`;
+    }).join('');
+    caixa.querySelectorAll('.balao-sugestao').forEach(botao => {
+      botao.addEventListener('click', () => selecionarMaterialBalao(botao.dataset.material));
+    });
+  }
+
+  function selecionarMaterialBalao(material) {
+    BALAO_ADD.material = material;
+    BALAO_ADD.lote = null;
+    document.querySelectorAll('.balao-sugestao').forEach(botao => {
+      botao.classList.toggle('selecionado', botao.dataset.material === material);
+    });
+    renderLotesBalao();
+    atualizarConfirmarBalao();
+  }
+
+  function renderLotesBalao() {
+    const caixa = document.getElementById('balao-lotes');
+    if (!caixa) return;
+    const info = BALAO_ADD.material
+      ? (BALAO_ADD.indice || new Map()).get(BALAO_ADD.material)
+      : null;
+    if (!info) { caixa.hidden = true; caixa.innerHTML = ''; return; }
+    const lotes = [...info.lotes.keys()].sort((a, b) =>
+      a.localeCompare(b, 'pt-BR', { numeric: true }));
+    caixa.hidden = false;
+    caixa.innerHTML = '<span class="balao-rotulo">Lote</span>' + lotes.map(lote => {
+      const selecionado = lote === BALAO_ADD.lote ? ' selecionado' : '';
+      return `<button type="button" class="balao-lote-op${selecionado}" data-lote="${escapar(lote)}">
+        <span>Lote ${escapar(rotuloLote(lote))}</span>
+        <span class="balao-lote-op-sub">${info.lotes.get(lote)} livre(s)</span>
+      </button>`;
+    }).join('');
+    caixa.querySelectorAll('.balao-lote-op').forEach(botao => {
+      botao.addEventListener('click', () => selecionarLoteBalao(botao.dataset.lote));
+    });
+    if (lotes.length === 1) selecionarLoteBalao(lotes[0]);
+  }
+
+  function selecionarLoteBalao(lote) {
+    BALAO_ADD.lote = lote;
+    document.querySelectorAll('.balao-lote-op').forEach(botao => {
+      botao.classList.toggle('selecionado', botao.dataset.lote === lote);
+    });
+    atualizarConfirmarBalao();
+  }
+
+  function atualizarConfirmarBalao() {
+    const botao = document.getElementById('balao-add-confirmar');
+    if (botao) botao.disabled = !(BALAO_ADD.material && BALAO_ADD.lote !== null);
+  }
+
+  function mostrarErroBalao(mensagem) {
+    const caixa = document.getElementById('balao-add-erro');
+    if (!caixa) return;
+    caixa.textContent = mensagem;
+    caixa.hidden = false;
+  }
+
+  function udJaUsada(ud) {
+    const alvo = String(ud);
+    let achou = false;
+    DADOS_MAPA.filas.forEach(fila => fila.posicoes.forEach(posicao => {
+      (posicao.pallets || []).forEach(pallet => {
+        if (pallet.ud !== null && pallet.ud !== undefined && String(pallet.ud) === alvo) {
+          achou = true;
+        }
+      });
+    }));
+    return achou;
+  }
+
+  // Desconta 1 pallet livre do material+lote (após adicionar manualmente).
+  function debitarLivre(material, lote) {
+    const lista = DADOS_MAPA.lx02_livres || [];
+    for (let i = 0; i < lista.length; i++) {
+      if (String(lista[i].material) !== String(material)) continue;
+      const chave = chaveLote(lote);
+      lista[i].lotes = (lista[i].lotes || []).filter(itemLote => {
+        if (chaveLote(itemLote.lote) !== chave) return true;
+        itemLote.pallets = Math.max(0, (Number(itemLote.pallets) || 0) - 1);
+        return itemLote.pallets > 0;
+      });
+      if (!lista[i].lotes.length) lista.splice(i, 1);
+      break;
+    }
+  }
+
+  // Devolve 1 pallet ao estoque livre (após remover um pallet manual).
+  function creditarLivre(material, lote, descricao) {
+    if (material === null || material === undefined) return;
+    if (!DADOS_MAPA.lx02_livres) DADOS_MAPA.lx02_livres = [];
+    const lista = DADOS_MAPA.lx02_livres;
+    let info = lista.find(item => String(item.material) === String(material));
+    if (!info) {
+      info = { material: material, descricao: descricao || null, lotes: [] };
+      lista.push(info);
+    }
+    const chave = chaveLote(lote);
+    let itemLote = (info.lotes || []).find(item => chaveLote(item.lote) === chave);
+    if (!itemLote) { itemLote = { lote: chave, pallets: 0 }; info.lotes.push(itemLote); }
+    itemLote.pallets = (Number(itemLote.pallets) || 0) + 1;
+  }
+
+  function adicionarPalletNaPosicao(posicao) {
+    const material = BALAO_ADD.material;
+    if (!material) return;
+    const lote = BALAO_ADD.lote === null ? '' : BALAO_ADD.lote;
+    const info = (BALAO_ADD.indice || new Map()).get(material);
+    const campoUd = document.getElementById('balao-ud');
+    const udDigitada = campoUd ? campoUd.value.trim() : '';
+    const erro = document.getElementById('balao-add-erro');
+    if (erro) erro.hidden = true;
+
+    if (posicao.pallets.length >= 2) {
+      return mostrarErroBalao('A posição já tem 2 pallets.');
+    }
+    if (udDigitada) {
+      if (!/^\d{10}$/.test(udDigitada)) {
+        return mostrarErroBalao('A UD deve ter 10 dígitos.');
+      }
+      if (udJaUsada(udDigitada)) {
+        return mostrarErroBalao('Essa UD já está no mapa.');
+      }
+    }
+
+    posicao.pallets.push({
+      ud: udDigitada || null,
+      empilhamento: posicao.pallets.length + 1,
+      material: material,
+      descricao: info ? info.descricao : null,
+      lote: lote === '' ? null : lote,
+      estoque: null,
+      umb: null,
+      data_em: null,
+      data_venc: null,
+      inconsistente: false,
+      manual: true,
+    });
+    posicao.pallets.sort((a, b) => a.empilhamento - b.empilhamento);
+    posicao.estado = 'ocupada';
+    debitarLivre(material, lote);
+    redesenharComPainel(posicao.fila, posicao.posicao);
+  }
+
+  function removerPalletManual(posicao, empilhamento) {
+    const alvo = posicao.pallets.find(
+      pallet => pallet.empilhamento === empilhamento);
+    if (!alvo) return;
+    posicao.pallets = posicao.pallets.filter(pallet => pallet !== alvo);
+    posicao.pallets
+      .sort((a, b) => a.empilhamento - b.empilhamento)
+      .forEach((pallet, indice) => { pallet.empilhamento = indice + 1; });
+    posicao.estado = posicao.pallets.length ? 'ocupada' : 'vazia';
+    creditarLivre(alvo.material, alvo.lote, alvo.descricao);
+    redesenharComPainel(posicao.fila, posicao.posicao);
+  }
+
+  // Salva a sessão, redesenha e reabre o balão da posição (mantém o contexto).
+  function redesenharComPainel(fila, posicao) {
+    salvarSessao();
+    inicializarDados();
+    renderizarMapa();
+    renderizarRodape();
+    const botao = document.querySelector(
+      `.posicao[data-fila="${fila}"][data-posicao="${posicao}"]`);
+    const dados = POSICOES_POR_CHAVE[fila + '-' + posicao];
+    if (botao && dados) abrirPainel(dados, botao);
   }
 
   function posicionarBalao(balao, botao) {
@@ -1573,12 +2177,23 @@
     const altura = balao.offsetHeight;
     const margem = 8;
 
+    const header = document.querySelector('header');
+    const rodapeEl = document.getElementById('rodape');
+    const topoMin = (header && header.offsetHeight ? header.offsetHeight : 0) + margem;
+    const baseMax = (rodapeEl && !rodapeEl.hidden ? rodapeEl.offsetHeight : 0) + margem;
+
     let esquerda = r.left + r.width / 2 - largura / 2;
     esquerda = Math.max(margem, Math.min(esquerda, window.innerWidth - largura - margem));
 
+    const teto = topoMin;
+    const piso = Math.max(teto, window.innerHeight - baseMax - altura);
+
     let topo = r.top - altura - margem;
-    if (topo < margem) topo = r.bottom + margem;
-    topo = Math.max(margem, Math.min(topo, window.innerHeight - altura - margem));
+    if (topo < teto) {
+      const abaixo = r.bottom + margem;
+      topo = abaixo + altura <= window.innerHeight - baseMax ? abaixo : piso;
+    }
+    topo = Math.max(teto, Math.min(topo, piso));
 
     balao.style.left = `${esquerda}px`;
     balao.style.top = `${topo}px`;
@@ -1896,7 +2511,7 @@
     aplicarPayload(payload);
   }
 
-  function aplicarPayload(payload) {
+  function iniciarComDados(payload) {
     DADOS_MAPA = payload;
     ESTADO.avisosOcultos = false;
     inicializarDados();
@@ -1906,11 +2521,16 @@
     document.getElementById('rodape').hidden = false;
     document.getElementById('marca').textContent = payload.marca || APP.marca;
     document.getElementById('subtitulo').textContent =
-      `Última atualização: ${payload.gerado_em}`;
+      `Última atualização: ${payload.gerado_em || ''}`;
     document.title = payload.marca || APP.marca;
     registrarManifest();
     renderizarRodape();
     renderizarMapa();
+  }
+
+  function aplicarPayload(payload) {
+    salvarSessao(payload);
+    iniciarComDados(payload);
   }
 
   function iniciarTelaUpload() {
@@ -1958,6 +2578,14 @@
     if (evento.key === 'Escape') fecharPainel();
   });
 
+  // Mantém as setas de "pallet fora da tela" coerentes com a rolagem.
+  let tempoSinais = null;
+  const agendarSinais = () => {
+    if (tempoSinais) window.clearTimeout(tempoSinais);
+    tempoSinais = window.setTimeout(atualizarSinaisLaterais, 60);
+  };
+  document.addEventListener('scroll', agendarSinais, true);
+
   // Reenquadra a planta ao redimensionar (desktop)
   let tempoResize = null;
   window.addEventListener('resize', () => {
@@ -1965,6 +2593,7 @@
     tempoResize = window.setTimeout(() => {
       medirAlturas();
       if (DADOS_MAPA && window.matchMedia('(min-width: 1024px)').matches) zoomCaber();
+      atualizarSinaisLaterais();
     }, 150);
   });
 
@@ -1973,15 +2602,11 @@
   registrarManifest();
   document.getElementById('botao-arquivos').addEventListener('click', iniciarTelaUpload);
   if (DADOS_MAPA) {
-    inicializarDados();
-    document.getElementById('marca').textContent = DADOS_MAPA.marca || 'Mapa EXP';
-    document.getElementById('subtitulo').textContent =
-      `Última atualização: ${DADOS_MAPA.gerado_em}`;
-    document.title = DADOS_MAPA.marca || 'Mapa EXP';
-    renderizarRodape();
-    renderizarMapa();
+    iniciarComDados(DADOS_MAPA);
   } else {
-    iniciarTelaUpload();
+    const sessao = carregarSessao();
+    if (sessao) iniciarComDados(sessao);
+    else iniciarTelaUpload();
   }
 </script>
 </body>

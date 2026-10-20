@@ -3,7 +3,7 @@
   "private": true,
   "description": "Testes de navegador (jsdom) dos arquivos gerados em dist/",
   "scripts": {
-    "test": "node test_ui3.js && node test_branco.js && node test_coleta.js && node test_coleta_persist.js && node check_subtitulo.js"
+    "test": "node test_ui3.js && node test_branco.js && node test_coleta.js && node test_coleta_persist.js && node test_add_pallet.js && node test_sinal_fila.js && node test_indicador_busca.js && node check_subtitulo.js"
   },
   "devDependencies": {
     "jsdom": "^24.0.0"

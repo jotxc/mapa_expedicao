@@ -596,6 +596,10 @@
       return lista && lista.length ? lista[0] : {};
     }
 
+    // UDs da LX02 que não aparecem na bipagem: candidatas a serem
+    // adicionadas manualmente na tela. Agrupadas por material -> lotes.
+    var lx02Livres = montarLx02Livres(sapPorUd, posicoesPorUd);
+
     if (duplicadas.length) {
       var dupl = duplicadas.slice().sort();
       var pd = posicao(dupl[0]);
@@ -648,7 +652,43 @@
       filas: estruturarFilas(dfMapa, posicoesVazias, problemas),
       problemas: problemas,
       alertas: alertas,
+      lx02_livres: lx02Livres,
     };
+  }
+
+  // Monta a lista de materiais da LX02 ainda sem posição na bipagem,
+  // no formato consumido pelo seletor da tela:
+  //   [{ material, descricao, lotes: [{ lote, pallets }] }]
+  function montarLx02Livres(sapPorUd, posicoesPorUd) {
+    var porMaterial = {};
+    var ordem = [];
+    var uds = Object.keys(sapPorUd);
+    for (var i = 0; i < uds.length; i++) {
+      var ud = uds[i];
+      if (posicoesPorUd[ud] && posicoesPorUd[ud].length) continue;
+      var sap = sapPorUd[ud];
+      var material = texto(sap['Material']);
+      if (material === null) continue;
+      var descricao = texto(sap['Texto breve de material']);
+      if (!porMaterial[material]) {
+        porMaterial[material] = { material: material, descricao: descricao, lotes: {} };
+        ordem.push(material);
+      } else if (!porMaterial[material].descricao) {
+        porMaterial[material].descricao = descricao;
+      }
+      var lote = texto(sap['Lote']);
+      var chave = lote === null ? '' : String(lote);
+      porMaterial[material].lotes[chave] = (porMaterial[material].lotes[chave] || 0) + 1;
+    }
+    var livres = [];
+    for (var m = 0; m < ordem.length; m++) {
+      var info = porMaterial[ordem[m]];
+      var lotes = Object.keys(info.lotes).map(function (chave) {
+        return { lote: chave, pallets: info.lotes[chave] };
+      });
+      livres.push({ material: info.material, descricao: info.descricao, lotes: lotes });
+    }
+    return livres;
   }
 
   var MapaCore = {

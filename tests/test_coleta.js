@@ -69,6 +69,17 @@ setTimeout(() => {
   const gravado = JSON.parse(W.localStorage.getItem(chaves[0]) || '[]');
   if (gravado.length) bad('localStorage nao esvaziou'); else ok('localStorage esvaziou ao desmarcar');
 
+  // Remover pallet original (bipado): deve sumir e a contagem cair
+  const antesRemover = d.querySelectorAll('#painel-conteudo .balao-item').length;
+  const remover = d.querySelector('#painel-conteudo .balao-remover');
+  if (antesRemover < 1 || !remover) bad('sem botao remover para pallet bipado');
+  else {
+    clicar(remover);
+    const depoisRemover = d.querySelectorAll('#painel-conteudo .balao-item').length;
+    if (depoisRemover !== antesRemover - 1) bad('remover nao reduziu a contagem de pallets');
+    else ok('pallet bipado removido (' + antesRemover + '->' + depoisRemover + ')');
+  }
+
   fim();
 }, 600);
 

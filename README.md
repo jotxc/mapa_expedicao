@@ -29,6 +29,8 @@ A mesma lógica de leitura existe em duas linguagens: `mapa_dados.py` (CLI/Excel
 - **Resumo no rodapé**: pallets, ocupação % e posições livres (e o total de pallets já **coletados**).
 - **Detalhe da posição**: balão ancorado no próprio quadrado (funciona igual no celular), com descrição, código do material e lote.
 - **Marcar coletado**: dentro do balão, **um toque** no botão **Marcar coletado** marca a posição inteira (os dois pallets de uma vez) e vira **✓ Coletado**; toque de novo para desfazer. A posição coletada fica **esmaecida/apagada com um V**. A marcação fica salva no aparelho (localStorage) e sobrevive a recarregar a página, começando zerada ao trocar os arquivos do dia.
+- **Adicionar pallet manualmente**: ao tocar uma posição vazia (ou que tenha só um pallet), o balão tem o botão **+ Adicionar pallet**. Escolha o **material** (sugestões da LX02, por código ou descrição) e o **lote** disponível — há ainda um campo **UD (opcional)**. O pallet entra marcado como *adicionado* e pode ser **removido**. É o caminho para os pallets que chegam **depois** da bipagem, sem refazer tudo.
+- **Sessão do dia salva no aparelho**: o mapa carregado (com as adições manuais) fica guardado no navegador (`localStorage`). Reabrir o arquivo retoma de onde parou, sem subir os arquivos de novo. Um novo upload substitui a sessão do dia.
 - **Auto-enquadrar** no desktop, e **modo escuro** (preferência salva).
 - **PWA**: dá para "adicionar à tela inicial" do celular.
 
@@ -194,4 +196,5 @@ nome do arquivo (`FILA 2`, `INVENTARIO_3`, …) quando não houver título.
 - O `manifest` do PWA é gerado em memória (Blob). Abrindo o arquivo via `file://`, o navegador pode não oferecer a instalação; ao publicar em um servidor, o recurso habilita.
 - O HTML embute as libs **pdf.js** e **SheetJS** (via `src/web/vendor/`) e, quando gerado com dados, também o conteúdo — por isso o arquivo tem ~2,6 MB. Funciona **offline** depois de aberto, e a leitura de PDF no upload usa o worker embutido (Blob), sem depender de CDN.
 - O `src/gerar_mapa_html.py` monta o HTML a partir de `src/web/mapa_template.html`, substituindo os placeholders `__DADOS_MAPA__`, `/*__MAPA_CORE__*/`, `/*__LIB_PDFJS__*/`, `/*__LIB_XLSX__*/` e `__PDF_WORKER_B64__`.
+- O payload gerado inclui `lx02_livres` (UDs da LX02 ainda sem posição), que alimenta o seletor de **adicionar pallet**. A sessão do dia é guardada no `localStorage` sob a chave `mapa-exp-sessao`.
 - Os scripts ancoram os caminhos na própria localização (`__file__`), então rodam de qualquer diretório: entram por `data/input/` e saem em `dist/`. Os arquivos de `data/input/` e `dist/` **não vão para o Git** (dados reais e artefatos reproduzíveis).
